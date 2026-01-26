@@ -1,238 +1,808 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard de Calidad</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Calidad - Producción</title>
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            background: #f0f2f5; 
-            padding: 20px; 
+        /* ===== RESET Y BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .container { 
-            max-width: 400px; 
-            margin: 0 auto; 
-            background: white; 
-            padding: 30px; 
-            border-radius: 10px; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-700: #374151;
+            --gray-900: #111827;
         }
-        h1 { color: #333; text-align: center; }
-        .tab { 
-            display: inline-block; 
-            padding: 10px 20px; 
-            cursor: pointer; 
-            border-bottom: 2px solid transparent; 
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            line-height: 1.6;
         }
-        .tab.active { 
-            border-bottom-color: #4285f4; 
-            font-weight: bold; 
+
+        /* ===== CONTENEDOR PRINCIPAL ===== */
+        .container {
+            width: 100%;
+            max-width: 440px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 
+                        0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            animation: slideUp 0.5s ease;
         }
-        input, select { 
-            width: 100%; 
-            padding: 10px; 
-            margin: 8px 0 20px; 
-            border: 1px solid #ddd; 
-            border-radius: 5px; 
-            box-sizing: border-box; 
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        button { 
-            width: 100%; 
-            padding: 12px; 
-            background: #4285f4; 
-            color: white; 
-            border: none; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            font-size: 16px; 
-            margin: 5px 0; 
+
+        /* ===== ENCABEZADO ===== */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 32px;
+            text-align: center;
         }
-        button:hover { background: #3367d6; }
-        button.secondary { background: #5f6368; }
-        button.secondary:hover { background: #3c4043; }
-        .message { 
-            padding: 10px; 
-            margin: 10px 0; 
-            border-radius: 5px; 
-            display: none; 
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
-        .success { background: #d4edda; color: #155724; display: block; }
-        .error { background: #f8d7da; color: #721c24; display: block; }
-        .spinner { 
-            border: 3px solid #f3f3f3; 
-            border-top: 3px solid #4285f4; 
-            border-radius: 50%; 
-            width: 20px; 
-            height: 20px; 
-            animation: spin 1s linear infinite; 
-            display: none; 
-            margin: 0 auto; 
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+            font-weight: 400;
         }
-        @keyframes spin { 
-            0% { transform: rotate(0deg); } 
-            100% { transform: rotate(360deg); } 
+
+        /* ===== PESTAÑAS ===== */
+        .tabs {
+            display: flex;
+            background: var(--gray-50);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 18px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--gray-700);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            user-select: none;
+        }
+
+        .tab:hover {
+            background: var(--gray-100);
+        }
+
+        .tab.active {
+            color: var(--primary);
+            background: white;
+            border-bottom-color: var(--primary);
+        }
+
+        /* ===== CONTENIDO DE FORMULARIOS ===== */
+        .content {
+            padding: 40px;
+        }
+
+        .form-container {
+            display: none;
+        }
+
+        .form-container.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* ===== GRUPOS DE FORMULARIO ===== */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--gray-700);
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--gray-200);
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-control.error {
+            border-color: var(--error);
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--gray-700);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .toggle-password:hover {
+            background: var(--gray-100);
+        }
+
+        /* ===== BOTONES ===== */
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--gray-700);
+            border: 2px solid var(--gray-200);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--gray-50);
+            border-color: var(--gray-300);
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        /* ===== ALERTAS ===== */
+        .alert {
+            padding: 16px;
+            border-radius: 10px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .alert-warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        /* ===== SPINNER ===== */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ===== ENLACES ===== */
+        .link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        /* ===== INFO DEBUG ===== */
+        .debug-info {
+            margin-top: 24px;
+            padding: 16px;
+            background: var(--gray-50);
+            border-radius: 10px;
+            font-size: 12px;
+            color: var(--gray-700);
+            display: none;
+            border-left: 4px solid var(--primary);
+        }
+
+        .debug-info.show {
+            display: block;
+        }
+
+        .debug-info pre {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 8px;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 11px;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: var(--gray-700);
+            border-top: 1px solid var(--gray-200);
+            background: var(--gray-50);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 480px) {
+            .container {
+                border-radius: 12px;
+            }
+            
+            .header {
+                padding: 24px;
+            }
+            
+            .content {
+                padding: 24px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Dashboard de Calidad</h1>
-        
-        <div style="text-align: center; margin: 20px 0;">
-            <span class="tab active" onclick="showTab('register')">Registro</span>
-            <span class="tab" onclick="showTab('login')">Iniciar Sesión</span>
+        <!-- ENCABEZADO -->
+        <div class="header">
+            <h1>Dashboard de Calidad</h1>
+            <p>Sistema de Gestión y Control de Calidad</p>
         </div>
-        
-        <div id="message" class="message"></div>
-        
-        <!-- Formulario Registro -->
-        <form id="registerForm" onsubmit="registrar(event)">
-            <input type="text" id="nombre" placeholder="Nombre completo" required>
-            <input type="email" id="email" placeholder="Email" required>
-            <input type="password" id="password" placeholder="Contraseña" required>
-            <select id="rol" required>
-                <option value="">Seleccionar Rol</option>
-                <option value="Usuario">Usuario</option>
-                <option value="Administrador">Administrador</option>
-                <option value="Auditor">Auditor</option>
-                <option value="Supervisor">Supervisor</option>
-            </select>
-            <button type="submit">Registrarse</button>
-        </form>
-        
-        <!-- Formulario Login -->
-        <form id="loginForm" style="display:none;" onsubmit="login(event)">
-            <input type="email" id="loginEmail" placeholder="Email" required>
-            <input type="password" id="loginPassword" placeholder="Contraseña" required>
-            <button type="submit">Iniciar Sesión</button>
-        </form>
-        
-        <button class="secondary" onclick="probarConexion()">Probar Conexión API</button>
+
+        <!-- PESTAÑAS -->
+        <div class="tabs">
+            <div class="tab active" data-tab="register">Registro</div>
+            <div class="tab" data-tab="login">Iniciar Sesión</div>
+        </div>
+
+        <!-- CONTENIDO -->
+        <div class="content">
+            <!-- ALERTAS -->
+            <div id="alert" class="alert"></div>
+
+            <!-- FORMULARIO DE REGISTRO -->
+            <form id="registerForm" class="form-container active">
+                <div class="form-group">
+                    <label for="fullName">Nombre completo *</label>
+                    <input type="text" id="fullName" class="form-control" 
+                           placeholder="Roberto Hernandez Gomez" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input type="email" id="email" class="form-control" 
+                           placeholder="roberto_rhg@hotmail.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Contraseña *</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" class="form-control" 
+                               placeholder="Mínimo 6 caracteres" minlength="6" required>
+                        <button type="button" class="toggle-password" data-target="password">👁️</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="role">Rol *</label>
+                    <select id="role" class="form-control" required>
+                        <option value="">Seleccionar rol</option>
+                        <option value="Usuario">Usuario</option>
+                        <option value="Administrador">Administrador</option>
+                        <option value="Auditor">Auditor</option>
+                        <option value="Supervisor">Supervisor</option>
+                        <option value="Calidad">Control de Calidad</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="registerBtn">
+                    <span>Registrarse</span>
+                    <div class="spinner" id="registerSpinner"></div>
+                </button>
+
+                <button type="button" class="btn btn-secondary" id="testConnectionBtn">
+                    Probar Conexión API
+                </button>
+            </form>
+
+            <!-- FORMULARIO DE LOGIN -->
+            <form id="loginForm" class="form-container">
+                <div class="form-group">
+                    <label for="loginEmail">Email *</label>
+                    <input type="email" id="loginEmail" class="form-control" 
+                           placeholder="roberto_rhg@hotmail.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Contraseña *</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="loginPassword" class="form-control" 
+                               placeholder="Tu contraseña" required>
+                        <button type="button" class="toggle-password" data-target="loginPassword">👁️</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="loginBtn">
+                    <span>Iniciar Sesión</span>
+                    <div class="spinner" id="loginSpinner"></div>
+                </button>
+            </form>
+
+            <!-- INFO DEBUG -->
+            <div class="debug-info" id="debugInfo"></div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <p>Dashboard de Calidad v1.0.0 | Google Apps Script + Sheets</p>
+            <p id="connectionStatus">🔄 Estado: Desconectado</p>
+        </div>
     </div>
 
     <script>
-        // ⚠️ REEMPLAZA ESTO CON TU URL COMPLETA
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbxXogeMr6tsb_8h9Ql6T69Wpf04IhKi_GL7gB54PVblGMxzPFpCUkSOfJlepOEKe-Nb/exec";
-        
-        function showMessage(text, type) {
-            const msg = document.getElementById('message');
-            msg.textContent = text;
-            msg.className = `message ${type}`;
-            setTimeout(() => msg.style.display = 'none', 5000);
-        }
-        
-        function showTab(tabName) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('registerForm').style.display = 'none';
-            document.getElementById('loginForm').style.display = 'none';
+        // ============================================
+        // CONFIGURACIÓN
+        // ============================================
+        const CONFIG = {
+            // ⚠️ REEMPLAZA CON TU URL DE APPS SCRIPT
+            GAS_URL: "https://script.google.com/macros/s/AKfycbxXogeMr6tsb_8h9Ql6T69Wpf04IhKi_GL7gB54PVblGMxzPFpCUkSOfJlepOEKe-Nb/exec",
             
-            document.querySelector(`[onclick*="${tabName}"]`).classList.add('active');
-            document.getElementById(tabName + 'Form').style.display = 'block';
-            document.getElementById('message').style.display = 'none';
-        }
-        
-        async function probarConexion() {
-            const btn = event?.target || document.activeElement;
-            const originalText = btn.textContent;
-            btn.textContent = 'Probando...';
-            btn.disabled = true;
+            // Headers para todas las solicitudes
+            headers: {
+                'Content-Type': 'application/json'
+            },
             
-            try {
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({action: 'probarConexion'})
-                });
-                
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                
-                const data = await response.json();
-                showMessage(data.message || '✅ Conexión exitosa', 'success');
-                
-            } catch(error) {
-                showMessage(`❌ Error: ${error.message}`, 'error');
-            } finally {
-                btn.textContent = originalText;
-                btn.disabled = false;
+            // Timeout en milisegundos
+            timeout: 30000
+        };
+
+        // ============================================
+        // ESTADO GLOBAL
+        // ============================================
+        const state = {
+            isOnline: false,
+            lastConnection: null,
+            retryCount: 0
+        };
+
+        // ============================================
+        // ELEMENTOS DOM
+        // ============================================
+        const elements = {
+            alert: document.getElementById('alert'),
+            debugInfo: document.getElementById('debugInfo'),
+            connectionStatus: document.getElementById('connectionStatus'),
+            
+            // Formularios
+            registerForm: document.getElementById('registerForm'),
+            loginForm: document.getElementById('loginForm'),
+            
+            // Botones
+            registerBtn: document.getElementById('registerBtn'),
+            loginBtn: document.getElementById('loginBtn'),
+            testConnectionBtn: document.getElementById('testConnectionBtn'),
+            
+            // Spinners
+            registerSpinner: document.getElementById('registerSpinner'),
+            loginSpinner: document.getElementById('loginSpinner')
+        };
+
+        // ============================================
+        // FUNCIONES DE UTILIDAD
+        // ============================================
+        function showAlert(message, type = 'info', duration = 5000) {
+            const alert = elements.alert;
+            alert.textContent = message;
+            alert.className = `alert alert-${type} show`;
+            
+            if (duration > 0 && type !== 'error') {
+                setTimeout(() => {
+                    alert.classList.remove('show');
+                }, duration);
+            }
+            
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        function showLoading(button, spinner, isLoading) {
+            const buttonText = button.querySelector('span');
+            
+            if (isLoading) {
+                button.disabled = true;
+                buttonText.style.opacity = '0.5';
+                spinner.style.display = 'block';
+            } else {
+                button.disabled = false;
+                buttonText.style.opacity = '1';
+                spinner.style.display = 'none';
             }
         }
-        
-        async function registrar(e) {
-            e.preventDefault();
-            const btn = e.target.querySelector('button');
-            const originalText = btn.textContent;
-            btn.textContent = 'Registrando...';
-            btn.disabled = true;
+
+        function updateConnectionStatus(isConnected) {
+            state.isOnline = isConnected;
+            state.lastConnection = new Date();
             
-            const datos = {
-                nombre: document.getElementById('nombre').value,
-                email: document.getElementById('email').value,
+            if (isConnected) {
+                elements.connectionStatus.textContent = '✅ Estado: Conectado';
+                elements.connectionStatus.style.color = '#10b981';
+            } else {
+                elements.connectionStatus.textContent = '❌ Estado: Desconectado';
+                elements.connectionStatus.style.color = '#ef4444';
+            }
+        }
+
+        function showDebugInfo(data) {
+            const debugEl = elements.debugInfo;
+            debugEl.innerHTML = `
+                <strong>Información de Depuración:</strong>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            debugEl.classList.add('show');
+        }
+
+        // ============================================
+        // MANEJO DE PESTAÑAS
+        // ============================================
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.dataset.tab;
+                
+                // Actualizar pestañas activas
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.form-container').forEach(f => f.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(`${tabId}Form`).classList.add('active');
+                
+                // Limpiar alertas
+                elements.alert.classList.remove('show');
+            });
+        });
+
+        // ============================================
+        // TOGGLE VISIBILIDAD DE CONTRASEÑA
+        // ============================================
+        document.querySelectorAll('.toggle-password').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.dataset.target;
+                const input = document.getElementById(targetId);
+                const type = input.type === 'password' ? 'text' : 'password';
+                input.type = type;
+            });
+        });
+
+        // ============================================
+        // FUNCIÓN DE CONEXIÓN MEJORADA
+        // ============================================
+        async function testConnection() {
+            showLoading(elements.testConnectionBtn, elements.registerSpinner, true);
+            
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), CONFIG.timeout);
+                
+                const response = await fetch(CONFIG.GAS_URL, {
+                    method: 'POST',
+                    headers: CONFIG.headers,
+                    body: JSON.stringify({ action: 'probarConexion' }),
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert(data.mensaje || '✅ Conexión exitosa', 'success');
+                    updateConnectionStatus(true);
+                    state.retryCount = 0;
+                    
+                    // Mostrar info detallada en debug
+                    showDebugInfo({
+                        url: CONFIG.GAS_URL,
+                        status: response.status,
+                        timestamp: new Date().toISOString(),
+                        response: data
+                    });
+                } else {
+                    throw new Error(data.error || 'Error desconocido en la respuesta');
+                }
+                
+            } catch (error) {
+                state.retryCount++;
+                
+                let errorMessage = error.message;
+                
+                // Mensajes más amigables
+                if (error.name === 'AbortError') {
+                    errorMessage = 'Timeout: La solicitud tardó demasiado';
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMessage = 'No se puede conectar al servidor. Verifica: 1) URL correcta, 2) Despliegue activo, 3) Permisos "Cualquier persona"';
+                }
+                
+                showAlert(`❌ Error de conexión: ${errorMessage}`, 'error', 0);
+                updateConnectionStatus(false);
+                
+                // Mostrar ayuda en debug
+                showDebugInfo({
+                    error: error.message,
+                    retryCount: state.retryCount,
+                    url: CONFIG.GAS_URL,
+                    suggestions: [
+                        'Verifica que la URL sea correcta',
+                        'Asegúrate de haber desplegado como "Cualquier persona"',
+                        'Prueba la URL directamente en el navegador',
+                        'Verifica que no haya errores en la consola de Apps Script'
+                    ]
+                });
+            } finally {
+                showLoading(elements.testConnectionBtn, elements.registerSpinner, false);
+            }
+        }
+
+        // ============================================
+        // REGISTRO DE USUARIO
+        // ============================================
+        elements.registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showLoading(elements.registerBtn, elements.registerSpinner, true);
+            
+            const formData = {
+                nombre: document.getElementById('fullName').value.trim(),
+                email: document.getElementById('email').value.trim(),
                 password: document.getElementById('password').value,
-                rol: document.getElementById('rol').value,
+                rol: document.getElementById('role').value,
                 action: 'registrar'
             };
             
+            // Validación básica
+            if (!formData.email || !formData.password) {
+                showAlert('Email y contraseña son requeridos', 'error');
+                showLoading(elements.registerBtn, elements.registerSpinner, false);
+                return;
+            }
+            
+            if (formData.password.length < 6) {
+                showAlert('La contraseña debe tener al menos 6 caracteres', 'error');
+                showLoading(elements.registerBtn, elements.registerSpinner, false);
+                return;
+            }
+            
             try {
-                const response = await fetch(GAS_URL, {
+                const response = await fetch(CONFIG.GAS_URL, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(datos)
+                    headers: CONFIG.headers,
+                    body: JSON.stringify(formData)
                 });
                 
                 const data = await response.json();
                 
                 if (data.success) {
-                    showMessage(data.message || '✅ Usuario registrado', 'success');
-                    e.target.reset();
+                    showAlert(data.mensaje || '✅ Usuario registrado exitosamente', 'success');
+                    elements.registerForm.reset();
+                    
+                    // Cambiar a login después de registro exitoso
+                    setTimeout(() => {
+                        document.querySelector('.tab[data-tab="login"]').click();
+                    }, 2000);
+                    
                 } else {
-                    showMessage(data.error || '❌ Error en registro', 'error');
+                    showAlert(`❌ ${data.error || 'Error en el registro'}`, 'error');
                 }
-            } catch(error) {
-                showMessage(`❌ Error de conexión: ${error.message}`, 'error');
+                
+            } catch (error) {
+                showAlert(`❌ Error de conexión: ${error.message}`, 'error');
             } finally {
-                btn.textContent = originalText;
-                btn.disabled = false;
+                showLoading(elements.registerBtn, elements.registerSpinner, false);
             }
-        }
-        
-        async function login(e) {
+        });
+
+        // ============================================
+        // INICIO DE SESIÓN
+        // ============================================
+        elements.loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btn = e.target.querySelector('button');
-            const originalText = btn.textContent;
-            btn.textContent = 'Iniciando...';
-            btn.disabled = true;
+            showLoading(elements.loginBtn, elements.loginSpinner, true);
             
-            const datos = {
-                email: document.getElementById('loginEmail').value,
+            const formData = {
+                email: document.getElementById('loginEmail').value.trim(),
                 password: document.getElementById('loginPassword').value,
                 action: 'login'
             };
             
             try {
-                const response = await fetch(GAS_URL, {
+                const response = await fetch(CONFIG.GAS_URL, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(datos)
+                    headers: CONFIG.headers,
+                    body: JSON.stringify(formData)
                 });
                 
                 const data = await response.json();
                 
                 if (data.success) {
-                    showMessage(`✅ Bienvenido ${data.nombre || ''}`, 'success');
-                    e.target.reset();
+                    showAlert(`✅ ${data.mensaje || 'Inicio de sesión exitoso'}`, 'success');
+                    elements.loginForm.reset();
+                    
+                    // Aquí podrías redirigir al dashboard
+                    // window.location.href = 'dashboard.html';
+                    
                 } else {
-                    showMessage(data.error || '❌ Credenciales incorrectas', 'error');
+                    showAlert(`❌ ${data.error || 'Credenciales incorrectas'}`, 'error');
                 }
-            } catch(error) {
-                showMessage(`❌ Error de conexión: ${error.message}`, 'error');
+                
+            } catch (error) {
+                showAlert(`❌ Error de conexión: ${error.message}`, 'error');
             } finally {
-                btn.textContent = originalText;
-                btn.disabled = false;
+                showLoading(elements.loginBtn, elements.loginSpinner, false);
             }
-        }
-        
-        // Probar conexión automáticamente
-        window.onload = probarConexion;
+        });
+
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+        elements.testConnectionBtn.addEventListener('click', testConnection);
+
+        // ============================================
+        // INICIALIZACIÓN
+        // ============================================
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Dashboard de Calidad inicializado');
+            
+            // Probar conexión automáticamente después de 1 segundo
+            setTimeout(() => {
+                testConnection();
+            }, 1000);
+            
+            // Intentar reconectar cada 30 segundos si está desconectado
+            setInterval(() => {
+                if (!state.isOnline && state.retryCount < 5) {
+                    console.log('🔄 Intentando reconexión...');
+                    testConnection();
+                }
+            }, 30000);
+        });
+
+        // ============================================
+        // MANEJO DE ERRORES GLOBALES
+        // ============================================
+        window.addEventListener('error', (e) => {
+            console.error('Error global:', e.error);
+            showAlert(`Error en la aplicación: ${e.message}`, 'error', 0);
+        });
+
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Promise rechazada:', e.reason);
+            showAlert(`Error no manejado: ${e.reason.message || e.reason}`, 'error', 0);
+        });
     </script>
 </body>
 </html>
