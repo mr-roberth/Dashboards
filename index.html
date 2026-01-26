@@ -3,557 +3,523 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Calidad de Cosecha</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Dashboard de Calidad - Acceso</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
         body {
-            font-family: Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-        }
-        
-        .login-container {
-            max-width: 400px;
-            margin: 50px auto;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            padding: 30px;
-        }
-        
-        .main-container {
-            display: none;
-            background: #f8f9fa;
-        }
-        
-        #loading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255,255,255,0.9);
-            display: none;
+            display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 9999;
-            flex-direction: column;
+            padding: 20px;
         }
-        
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 450px;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 18px;
+            text-align: center;
+            background: #f9fafb;
+            cursor: pointer;
+            font-weight: 500;
+            color: #6b7280;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: white;
+            color: #4f46e5;
+            border-bottom: 2px solid #4f46e5;
+        }
+
+        .tab:hover:not(.active) {
+            background: #f3f4f6;
+        }
+
+        .form-container {
+            padding: 35px;
+        }
+
+        .form {
+            display: none;
+        }
+
+        .form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+
+        .password-container {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 2px solid #e5e7eb;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 14px;
+            display: none;
+        }
+
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+            display: block;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            display: block;
+        }
+
         .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #007bff;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4f46e5;
             border-radius: 50%;
+            width: 20px;
+            height: 20px;
             animation: spin 1s linear infinite;
+            display: none;
+            margin: 0 auto;
         }
-        
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
-        .error-container {
-            display: none;
-            background: white;
-            border-radius: 10px;
-            padding: 30px;
-            margin: 50px auto;
-            max-width: 600px;
+
+        .footer {
             text-align: center;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            padding: 20px;
+            font-size: 12px;
+            color: #9ca3af;
+            border-top: 1px solid #e5e7eb;
         }
-        
-        .kpi-card {
-            background: white;
+
+        .user-info {
+            background: #f0f9ff;
             border-radius: 8px;
             padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            border-left: 4px solid #007bff;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .user-info.active {
+            display: block;
+        }
+
+        .user-info h3 {
+            color: #0369a1;
+            margin-bottom: 10px;
+        }
+
+        .user-info p {
+            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
-    <!-- Pantalla de Error -->
-    <div id="errorScreen" class="error-container">
-        <h2><i class="fas fa-exclamation-triangle text-warning"></i> Error de Conexión</h2>
-        <p id="errorMessage">No se pudo establecer conexión con el servidor.</p>
-        <p><small>Posibles soluciones:</small></p>
-        <ul class="text-start">
-            <li>Verifica tu conexión a internet</li>
-            <li>Asegúrate que la URL del API sea correcta</li>
-            <li>Revisa que el Google Apps Script esté desplegado como "Cualquiera"</li>
-        </ul>
-        <button id="retryConnection" class="btn btn-primary m-2">
-            <i class="fas fa-redo"></i> Reintentar
-        </button>
-        <button id="goToLogin" class="btn btn-outline-secondary m-2">
-            <i class="fas fa-sign-in-alt"></i> Volver al Login
-        </button>
-    </div>
-    
-    <!-- Pantalla de Login -->
-    <div id="loginScreen">
-        <div class="login-container">
-            <h2 class="text-center mb-4">
-                <i class="fas fa-seedling"></i> Dashboard de Calidad
-            </h2>
-            
-            <form id="loginForm">
-                <div class="mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="email" required>
-                </div>
-                
-                <div class="mb-3">
-                    <label for="password" class="form-label">Contraseña</label>
-                    <input type="password" class="form-control" id="password" required>
-                </div>
-                
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
-                </button>
-                
-                <div class="text-center mt-3">
-                    <a href="#" id="showRegister">¿No tienes cuenta? Regístrate</a>
-                </div>
-            </form>
-            
-            <form id="registerForm" style="display: none;">
-                <div class="mb-3">
-                    <label for="regNombre" class="form-label">Nombre completo</label>
-                    <input type="text" class="form-control" id="regNombre" required>
-                </div>
-                
-                <div class="mb-3">
-                    <label for="regEmail" class="form-label">Email</label>
-                    <input type="email" class="form-control" id="regEmail" required>
-                </div>
-                
-                <div class="mb-3">
-                    <label for="regPassword" class="form-label">Contraseña</label>
-                    <input type="password" class="form-control" id="regPassword" required minlength="6">
-                </div>
-                
-                <button type="submit" class="btn btn-success w-100">
-                    <i class="fas fa-user-plus"></i> Registrarse
-                </button>
-                
-                <div class="text-center mt-3">
-                    <a href="#" id="showLogin">¿Ya tienes cuenta? Inicia sesión</a>
-                </div>
-            </form>
-            
-            <div id="loginMessage" class="alert mt-3" style="display: none;"></div>
-            
-            <!-- Botón de prueba de conexión -->
-            <div class="text-center mt-4">
-                <button id="testConnection" class="btn btn-outline-info btn-sm">
-                    <i class="fas fa-wifi"></i> Probar Conexión API
-                </button>
-            </div>
+    <div class="container">
+        <div class="header">
+            <h1>Dashboard de Calidad</h1>
+            <p>Sistema de Gestión y Control</p>
         </div>
-    </div>
-    
-    <!-- Pantalla Principal -->
-    <div id="mainScreen" class="main-container">
-        <!-- Navbar -->
-        <nav class="navbar navbar-dark bg-dark">
-            <div class="container-fluid">
-                <span class="navbar-brand">
-                    <i class="fas fa-chart-bar"></i> Dashboard de Calidad
-                </span>
-                <div class="d-flex">
-                    <span class="navbar-text me-3" id="userInfo"></span>
-                    <button class="btn btn-outline-light btn-sm" id="logoutBtn">
-                        <i class="fas fa-sign-out-alt"></i> Salir
-                    </button>
-                </div>
-            </div>
-        </nav>
-        
-        <!-- Loading -->
-        <div id="loading">
-            <div class="spinner"></div>
-            <div class="mt-3" id="loadingMessage">Cargando...</div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="registro">Registro</div>
+            <div class="tab" data-tab="login">Iniciar Sesión</div>
         </div>
-        
-        <div class="container-fluid py-4">
-            <!-- Contenido principal -->
-            <div class="row mb-4" id="kpiSection">
-                <div class="col-md-12">
-                    <div class="alert alert-info">
-                        <h4>Bienvenido al Dashboard</h4>
-                        <p>Los datos se cargarán automáticamente después de iniciar sesión.</p>
+
+        <div class="form-container">
+            <div id="message" class="message"></div>
+
+            <!-- Formulario de Registro -->
+            <form id="registroForm" class="form active">
+                <div class="form-group">
+                    <label for="nombre">Nombre completo</label>
+                    <input type="text" id="nombre" name="nombre" placeholder="Roberto Hernandez Gomez" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="emailRegistro">Email</label>
+                    <input type="email" id="emailRegistro" name="email" placeholder="roberto_rhg@hotmail.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="passwordRegistro">Contraseña</label>
+                    <div class="password-container">
+                        <input type="password" id="passwordRegistro" name="password" placeholder="••••••••" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword('passwordRegistro')">👁️</button>
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <label for="rol">Rol</label>
+                    <select id="rol" name="rol">
+                        <option value="usuario">Usuario</option>
+                        <option value="admin">Administrador</option>
+                        <option value="supervisor">Supervisor</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="submitRegistroBtn">
+                    <span id="btnRegistroText">Registrarse</span>
+                    <div class="spinner" id="spinnerRegistro"></div>
+                </button>
+
+                <button type="button" class="btn btn-secondary" onclick="probarConexion()">
+                    Probar Conexión API
+                </button>
+            </form>
+
+            <!-- Formulario de Login -->
+            <form id="loginForm" class="form">
+                <div class="form-group">
+                    <label for="emailLogin">Email</label>
+                    <input type="email" id="emailLogin" name="email" placeholder="roberto_rhg@hotmail.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="passwordLogin">Contraseña</label>
+                    <div class="password-container">
+                        <input type="password" id="passwordLogin" name="password" placeholder="••••••••" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword('passwordLogin')">👁️</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="submitLoginBtn">
+                    <span id="btnLoginText">Iniciar Sesión</span>
+                    <div class="spinner" id="spinnerLogin"></div>
+                </button>
+            </form>
+
+            <!-- Información del usuario después del login -->
+            <div id="userInfo" class="user-info">
+                <h3>✅ Sesión Iniciada</h3>
+                <p><strong>Nombre:</strong> <span id="infoNombre"></span></p>
+                <p><strong>Email:</strong> <span id="infoEmail"></span></p>
+                <p><strong>Rol:</strong> <span id="infoRol"></span></p>
+                <button type="button" class="btn btn-secondary" onclick="cerrarSesion()" style="margin-top: 15px;">
+                    Cerrar Sesión
+                </button>
             </div>
+        </div>
+
+        <div class="footer">
+            Sistema Dashboard de Calidad © 2026 | Google Sheets + Apps Script
         </div>
     </div>
 
     <script>
-        // ================= CONFIGURACIÓN =================
-        // ¡¡¡IMPORTANTE!!! Reemplaza con tu URL de Google Apps Script
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxXogeMr6tsb_8h9Ql6T69Wpf04IhKi_GL7gB54PVblGMxzPFpCUkSOfJlepOEKe-Nb/exec';
-        
-        // ================= FUNCIONES DE UTILIDAD =================
-        function showLoading(message = 'Cargando...') {
-            document.getElementById('loadingMessage').textContent = message;
-            document.getElementById('loading').style.display = 'flex';
-        }
-        
-        function hideLoading() {
-            document.getElementById('loading').style.display = 'none';
-        }
-        
-        function showMessage(message, type = 'info') {
-            const alert = document.getElementById('loginMessage');
-            alert.textContent = message;
-            alert.className = `alert alert-${type}`;
-            alert.style.display = 'block';
-            setTimeout(() => {
-                alert.style.display = 'none';
-            }, 5000);
-        }
-        
-        function showError(message, isFatal = false) {
-            console.error('Error:', message);
+        // CONFIGURACIÓN - REEMPLAZA ESTA URL CON LA DE TU APPS SCRIPT
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbxXogeMr6tsb_8h9Ql6T69Wpf04IhKi_GL7gB54PVblGMxzPFpCUkSOfJlepOEKe-Nb/exec";
+
+        // Variables globales para sesión
+        let usuarioLogueado = null;
+
+        // Mostrar mensajes
+        function mostrarMensaje(texto, tipo) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = texto;
+            messageDiv.className = `message ${tipo}`;
+            messageDiv.style.display = 'block';
             
-            if (isFatal) {
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('mainScreen').style.display = 'none';
-                
-                const errorScreen = document.getElementById('errorScreen');
-                document.getElementById('errorMessage').textContent = message;
-                errorScreen.style.display = 'block';
-            } else {
-                showMessage(message, 'danger');
+            if (tipo === 'success') {
+                setTimeout(() => {
+                    messageDiv.style.display = 'none';
+                }, 5000);
             }
         }
-        
-        function hideError() {
-            document.getElementById('errorScreen').style.display = 'none';
+
+        // Alternar visibilidad de contraseña
+        function togglePassword(inputId) {
+            const passwordInput = document.getElementById(inputId);
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
         }
-        
-        // ================= FUNCIÓN DE PRUEBA DE CONEXIÓN =================
-        async function testAPIConnection() {
-            showLoading('Probando conexión con el servidor...');
-            
-            try {
-                // Usar URLSearchParams para datos POST
-                const formData = new URLSearchParams();
-                formData.append('action', 'test');
+
+        // Cambiar entre pestañas
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabId = this.getAttribute('data-tab');
                 
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    body: formData,
-                    mode: 'no-cors' // Modo simple para pruebas
+                // Actualizar pestañas activas
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Mostrar formulario correspondiente
+                document.querySelectorAll('.form').forEach(form => {
+                    form.classList.remove('active');
                 });
+                document.getElementById(tabId === 'login' ? 'loginForm' : 'registroForm').classList.add('active');
                 
-                // Para modo 'no-cors', no podemos leer la respuesta
-                // Si no hay error, asumimos que funciona
-                hideLoading();
-                showMessage('¡Conexión exitosa! El servidor responde correctamente.', 'success');
-                
-                // Ahora prueba con CORS
-                testCorsConnection();
-                
-            } catch (error) {
-                hideLoading();
-                showError('Error de conexión: ' + error.message);
-                
-                // Intentar método alternativo
-                testAlternativeConnection();
-            }
-        }
-        
-        async function testCorsConnection() {
-            try {
-                // Prueba con método GET
-                const testURL = GAS_URL + '?action=test&timestamp=' + Date.now();
-                const response = await fetch(testURL, {
-                    method: 'GET',
-                    mode: 'cors',
-                    cache: 'no-cache'
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('Respuesta del servidor:', data);
-                    showMessage('Conexión CORS funcionando correctamente. Versión: ' + (data.version || 'N/A'), 'success');
-                }
-            } catch (error) {
-                console.log('CORS falló, usando método alternativo');
-            }
-        }
-        
-        async function testAlternativeConnection() {
-            // Método alternativo usando JSONP para pruebas
-            const jsonpTest = document.createElement('script');
-            jsonpTest.src = GAS_URL + '?action=test&callback=handleTestResponse';
-            document.head.appendChild(jsonpTest);
-            
-            // Timeout
-            setTimeout(() => {
-                if (!window.testResponseReceived) {
-                    showMessage('El servidor puede estar bloqueado por CORS. Verifica la configuración.', 'warning');
-                }
-            }, 3000);
-        }
-        
-        // ================= MANEJO DE USUARIOS =================
-        async function login(email, password) {
-            showLoading('Iniciando sesión...');
-            
-            try {
-                const formData = new URLSearchParams();
-                formData.append('action', 'login');
-                formData.append('email', email);
-                formData.append('password', password);
-                
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    localStorage.setItem('user', JSON.stringify(result.user));
-                    document.getElementById('loginScreen').style.display = 'none';
-                    document.getElementById('mainScreen').style.display = 'block';
-                    document.getElementById('userInfo').textContent = `Hola, ${result.user.nombre}`;
-                    hideError();
-                    loadDashboard();
-                } else {
-                    showMessage(result.message || 'Credenciales incorrectas', 'danger');
-                }
-                
-            } catch (error) {
-                showError('Error al conectar con el servidor: ' + error.message);
-                
-                // Intentar con método GET como respaldo
-                try {
-                    const backupURL = GAS_URL + '?action=login&email=' + encodeURIComponent(email) + 
-                                     '&password=' + encodeURIComponent(password);
-                    const backupResponse = await fetch(backupURL);
-                    const backupResult = await backupResponse.json();
-                    
-                    if (backupResult.success) {
-                        localStorage.setItem('user', JSON.stringify(backupResult.user));
-                        document.getElementById('loginScreen').style.display = 'none';
-                        document.getElementById('mainScreen').style.display = 'block';
-                        document.getElementById('userInfo').textContent = `Hola, ${backupResult.user.nombre}`;
-                        loadDashboard();
-                    }
-                } catch (backupError) {
-                    showError('No se pudo establecer conexión con el servidor', true);
-                }
-            }
-            
-            hideLoading();
-        }
-        
-        async function register(nombre, email, password) {
-            showLoading('Registrando usuario...');
-            
-            try {
-                const formData = new URLSearchParams();
-                formData.append('action', 'register');
-                formData.append('nombre', nombre);
-                formData.append('email', email);
-                formData.append('password', password);
-                
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showMessage('Usuario registrado exitosamente. Ahora puedes iniciar sesión.', 'success');
-                    document.getElementById('registerForm').reset();
-                    document.getElementById('registerForm').style.display = 'none';
-                    document.getElementById('loginForm').style.display = 'block';
-                } else {
-                    showMessage(result.message, 'danger');
-                }
-                
-            } catch (error) {
-                showError('Error de conexión: ' + error.message);
-            }
-            
-            hideLoading();
-        }
-        
-        // ================= DASHBOARD =================
-        async function loadDashboard() {
-            showLoading('Cargando datos...');
-            
-            try {
-                // Cargar datos básicos
-                const formData = new URLSearchParams();
-                formData.append('action', 'getKPIs');
-                
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    updateKPIs(data);
-                }
-                
-            } catch (error) {
-                console.error('Error cargando dashboard:', error);
-            }
-            
-            hideLoading();
-        }
-        
-        function updateKPIs(data) {
-            const kpiSection = document.getElementById('kpiSection');
-            
-            if (!data || data.totalMuestras === 0) {
-                kpiSection.innerHTML = `
-                    <div class="col-md-12">
-                        <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            No hay datos disponibles o hubo un error al cargarlos.
-                        </div>
-                    </div>
-                `;
-                return;
-            }
-            
-            kpiSection.innerHTML = `
-                <div class="col-md-2">
-                    <div class="kpi-card">
-                        <div class="text-muted small">MUESTRAS TOTALES</div>
-                        <div class="h3">${data.totalMuestras || 0}</div>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="kpi-card">
-                        <div class="text-muted small">IMPUREZAS TOTALES</div>
-                        <div class="h3">${data.impurezasTotales ? data.impurezasTotales.toFixed(2) : 0}%</div>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="kpi-card">
-                        <div class="text-muted small">PUNTA EN BASURA</div>
-                        <div class="h3">${data.puntaBasura ? data.puntaBasura.toFixed(2) : 0} kg</div>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="kpi-card">
-                        <div class="text-muted small">ALTURA DE CORTE</div>
-                        <div class="h3">${data.alturaCorte ? data.alturaCorte.toFixed(2) : 0} cm</div>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="kpi-card">
-                        <div class="text-muted small">USO DE BANDAS</div>
-                        <div class="h3">${data.usoBandas ? data.usoBandas.toFixed(2) : 0}</div>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="kpi-card">
-                        <div class="text-muted small">PEGADA DE CORTE</div>
-                        <div class="h3">${data.pegadaCorte ? data.pegadaCorte.toFixed(2) : 0}</div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // ================= EVENT LISTENERS =================
-        document.addEventListener('DOMContentLoaded', function() {
-            // Interfaz de login/registro
-            document.getElementById('showRegister').addEventListener('click', function(e) {
-                e.preventDefault();
-                document.getElementById('loginForm').style.display = 'none';
-                document.getElementById('registerForm').style.display = 'block';
+                // Ocultar info de usuario si está visible
+                document.getElementById('userInfo').classList.remove('active');
             });
-            
-            document.getElementById('showLogin').addEventListener('click', function(e) {
-                e.preventDefault();
-                document.getElementById('registerForm').style.display = 'none';
-                document.getElementById('loginForm').style.display = 'block';
-            });
-            
-            // Login
-            document.getElementById('loginForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-                login(email, password);
-            });
-            
-            // Registro
-            document.getElementById('registerForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                const nombre = document.getElementById('regNombre').value;
-                const email = document.getElementById('regEmail').value;
-                const password = document.getElementById('regPassword').value;
-                register(nombre, email, password);
-            });
-            
-            // Logout
-            document.getElementById('logoutBtn').addEventListener('click', function() {
-                localStorage.removeItem('user');
-                document.getElementById('mainScreen').style.display = 'none';
-                document.getElementById('loginScreen').style.display = 'block';
-                document.getElementById('loginForm').reset();
-            });
-            
-            // Prueba de conexión
-            document.getElementById('testConnection').addEventListener('click', testAPIConnection);
-            
-            // Botones de error
-            document.getElementById('retryConnection').addEventListener('click', function() {
-                hideError();
-                testAPIConnection();
-            });
-            
-            document.getElementById('goToLogin').addEventListener('click', function() {
-                hideError();
-                document.getElementById('loginScreen').style.display = 'block';
-                document.getElementById('mainScreen').style.display = 'none';
-            });
-            
-            // Verificar si hay usuario guardado
-            const savedUser = localStorage.getItem('user');
-            if (savedUser) {
-                try {
-                    const user = JSON.parse(savedUser);
-                    document.getElementById('loginScreen').style.display = 'none';
-                    document.getElementById('mainScreen').style.display = 'block';
-                    document.getElementById('userInfo').textContent = `Hola, ${user.nombre}`;
-                    loadDashboard();
-                } catch (e) {
-                    localStorage.removeItem('user');
-                }
-            }
-            
-            // Prueba inicial de conexión
-            setTimeout(testAPIConnection, 1000);
         });
-        
-        // Función callback para JSONP
-        window.handleTestResponse = function(data) {
-            window.testResponseReceived = true;
-            console.log('Respuesta JSONP:', data);
-            showMessage('Conexión JSONP exitosa', 'success');
-        };
+
+        // Probar conexión con Google Apps Script
+        async function probarConexion() {
+            const btn = document.querySelector('.btn-secondary');
+            const originalText = btn.textContent;
+            
+            btn.textContent = 'Probando...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'probarConexion'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    mostrarMensaje(data.message, 'success');
+                } else {
+                    mostrarMensaje('Error en conexión: ' + (data.error || 'Desconocido'), 'error');
+                }
+            } catch (error) {
+                mostrarMensaje('Error de conexión: ' + error.message, 'error');
+            } finally {
+                btn.textContent = 'Probar Conexión API';
+                btn.disabled = false;
+            }
+        }
+
+        // Manejar envío del formulario de registro
+        document.getElementById('registroForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitRegistroBtn');
+            const btnText = document.getElementById('btnRegistroText');
+            const spinner = document.getElementById('spinnerRegistro');
+            
+            // Mostrar spinner
+            btnText.style.display = 'none';
+            spinner.style.display = 'block';
+            submitBtn.disabled = true;
+            
+            // Obtener datos del formulario
+            const formData = {
+                nombre: document.getElementById('nombre').value.trim(),
+                email: document.getElementById('emailRegistro').value.trim(),
+                password: document.getElementById('passwordRegistro').value,
+                rol: document.getElementById('rol').value,
+                action: 'registrar'
+            };
+            
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    mostrarMensaje(data.message, 'success');
+                    document.getElementById('registroForm').reset();
+                    // Cambiar a pestaña de login después de registro exitoso
+                    document.querySelector('.tab[data-tab="login"]').click();
+                } else {
+                    mostrarMensaje('Error: ' + (data.error || 'Error desconocido'), 'error');
+                }
+            } catch (error) {
+                mostrarMensaje('Error de conexión: ' + error.message, 'error');
+            } finally {
+                // Restaurar botón
+                btnText.style.display = 'block';
+                spinner.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Manejar envío del formulario de login
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitLoginBtn');
+            const btnText = document.getElementById('btnLoginText');
+            const spinner = document.getElementById('spinnerLogin');
+            
+            // Mostrar spinner
+            btnText.style.display = 'none';
+            spinner.style.display = 'block';
+            submitBtn.disabled = true;
+            
+            // Obtener datos del formulario
+            const formData = {
+                email: document.getElementById('emailLogin').value.trim(),
+                password: document.getElementById('passwordLogin').value,
+                action: 'login'
+            };
+            
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    usuarioLogueado = data;
+                    mostrarMensaje(data.message, 'success');
+                    
+                    // Mostrar información del usuario
+                    document.getElementById('infoNombre').textContent = data.nombre;
+                    document.getElementById('infoEmail').textContent = data.email;
+                    document.getElementById('infoRol').textContent = data.rol;
+                    
+                    document.getElementById('userInfo').classList.add('active');
+                    document.getElementById('loginForm').reset();
+                    document.getElementById('loginForm').classList.remove('active');
+                } else {
+                    mostrarMensaje('Error: ' + (data.error || 'Error desconocido'), 'error');
+                }
+            } catch (error) {
+                mostrarMensaje('Error de conexión: ' + error.message, 'error');
+            } finally {
+                // Restaurar botón
+                btnText.style.display = 'block';
+                spinner.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Cerrar sesión
+        function cerrarSesion() {
+            usuarioLogueado = null;
+            document.getElementById('userInfo').classList.remove('active');
+            document.getElementById('loginForm').classList.add('active');
+            mostrarMensaje('Sesión cerrada exitosamente', 'success');
+        }
+
+        // Probar conexión al cargar la página
+        window.addEventListener('load', function() {
+            // Opcional: probar conexión automáticamente
+            // probarConexion();
+        });
     </script>
 </body>
 </html>
