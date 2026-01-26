@@ -1,68 +1,238 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Prueba Conexión GAS</title>
+    <meta charset="UTF-8">
+    <title>Dashboard de Calidad</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background: #f0f2f5; 
+            padding: 20px; 
+        }
+        .container { 
+            max-width: 400px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        h1 { color: #333; text-align: center; }
+        .tab { 
+            display: inline-block; 
+            padding: 10px 20px; 
+            cursor: pointer; 
+            border-bottom: 2px solid transparent; 
+        }
+        .tab.active { 
+            border-bottom-color: #4285f4; 
+            font-weight: bold; 
+        }
+        input, select { 
+            width: 100%; 
+            padding: 10px; 
+            margin: 8px 0 20px; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+            box-sizing: border-box; 
+        }
+        button { 
+            width: 100%; 
+            padding: 12px; 
+            background: #4285f4; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            margin: 5px 0; 
+        }
+        button:hover { background: #3367d6; }
+        button.secondary { background: #5f6368; }
+        button.secondary:hover { background: #3c4043; }
+        .message { 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+            display: none; 
+        }
+        .success { background: #d4edda; color: #155724; display: block; }
+        .error { background: #f8d7da; color: #721c24; display: block; }
+        .spinner { 
+            border: 3px solid #f3f3f3; 
+            border-top: 3px solid #4285f4; 
+            border-radius: 50%; 
+            width: 20px; 
+            height: 20px; 
+            animation: spin 1s linear infinite; 
+            display: none; 
+            margin: 0 auto; 
+        }
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+    </style>
 </head>
 <body>
-    <h2>Prueba de Conexión Apps Script</h2>
-    
-    <input type="text" id="url" style="width: 500px;" 
-           value="https://script.google.com/macros/s/AKfycbxXogeMr6tsb_8h9Ql6T69Wpf04IhKi_GL7gB54PVblGMxzPFpCUkSOfJlepOEKe-Nb/exec">
-    
-    <button onclick="probarConexion()">Probar Conexión</button>
-    
-    <div id="resultado" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc;"></div>
-    
+    <div class="container">
+        <h1>Dashboard de Calidad</h1>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <span class="tab active" onclick="showTab('register')">Registro</span>
+            <span class="tab" onclick="showTab('login')">Iniciar Sesión</span>
+        </div>
+        
+        <div id="message" class="message"></div>
+        
+        <!-- Formulario Registro -->
+        <form id="registerForm" onsubmit="registrar(event)">
+            <input type="text" id="nombre" placeholder="Nombre completo" required>
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Contraseña" required>
+            <select id="rol" required>
+                <option value="">Seleccionar Rol</option>
+                <option value="Usuario">Usuario</option>
+                <option value="Administrador">Administrador</option>
+                <option value="Auditor">Auditor</option>
+                <option value="Supervisor">Supervisor</option>
+            </select>
+            <button type="submit">Registrarse</button>
+        </form>
+        
+        <!-- Formulario Login -->
+        <form id="loginForm" style="display:none;" onsubmit="login(event)">
+            <input type="email" id="loginEmail" placeholder="Email" required>
+            <input type="password" id="loginPassword" placeholder="Contraseña" required>
+            <button type="submit">Iniciar Sesión</button>
+        </form>
+        
+        <button class="secondary" onclick="probarConexion()">Probar Conexión API</button>
+    </div>
+
     <script>
-    async function probarConexion() {
-        const url = document.getElementById('url').value;
-        const resultado = document.getElementById('resultado');
+        // ⚠️ REEMPLAZA ESTO CON TU URL COMPLETA
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbxXogeMr6tsb_8h9Ql6T69Wpf04IhKi_GL7gB54PVblGMxzPFpCUkSOfJlepOEKe-Nb/exec";
         
-        resultado.innerHTML = "Probando conexión...";
-        resultado.style.background = "#fff3cd";
-        
-        try {
-            // PRIMERO: Probar con GET
-            const getResponse = await fetch(url);
-            const getData = await getResponse.text();
-            
-            resultado.innerHTML = `
-                <strong>✅ GET funciona:</strong><br>
-                Status: ${getResponse.status}<br>
-                Respuesta: ${getData.substring(0, 200)}...
-            `;
-            resultado.style.background = "#d1e7dd";
-            
-            // SEGUNDO: Probar con POST
-            const postResponse = await fetch(url, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({action: 'test', test: true})
-            });
-            
-            const postData = await postResponse.text();
-            
-            resultado.innerHTML += `<br><br>
-                <strong>✅ POST funciona:</strong><br>
-                Status: ${postResponse.status}<br>
-                Respuesta: ${postData.substring(0, 200)}...
-            `;
-            
-        } catch(error) {
-            resultado.innerHTML = `
-                <strong>❌ ERROR:</strong> ${error.message}<br><br>
-                <strong>Posibles causas:</strong><br>
-                1. La aplicación web no está desplegada como "Cualquier persona"<br>
-                2. La URL es incorrecta<br>
-                3. Hay un error en el código GAS<br>
-                4. Bloqueo de CORS (usa el navegador Chrome)
-            `;
-            resultado.style.background = "#f8d7da";
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = `message ${type}`;
+            setTimeout(() => msg.style.display = 'none', 5000);
         }
-    }
-    
-    // Probar automáticamente al cargar
-    window.onload = probarConexion;
+        
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'none';
+            
+            document.querySelector(`[onclick*="${tabName}"]`).classList.add('active');
+            document.getElementById(tabName + 'Form').style.display = 'block';
+            document.getElementById('message').style.display = 'none';
+        }
+        
+        async function probarConexion() {
+            const btn = event?.target || document.activeElement;
+            const originalText = btn.textContent;
+            btn.textContent = 'Probando...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({action: 'probarConexion'})
+                });
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                showMessage(data.message || '✅ Conexión exitosa', 'success');
+                
+            } catch(error) {
+                showMessage(`❌ Error: ${error.message}`, 'error');
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+        
+        async function registrar(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const originalText = btn.textContent;
+            btn.textContent = 'Registrando...';
+            btn.disabled = true;
+            
+            const datos = {
+                nombre: document.getElementById('nombre').value,
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                rol: document.getElementById('rol').value,
+                action: 'registrar'
+            };
+            
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(datos)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage(data.message || '✅ Usuario registrado', 'success');
+                    e.target.reset();
+                } else {
+                    showMessage(data.error || '❌ Error en registro', 'error');
+                }
+            } catch(error) {
+                showMessage(`❌ Error de conexión: ${error.message}`, 'error');
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+        
+        async function login(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const originalText = btn.textContent;
+            btn.textContent = 'Iniciando...';
+            btn.disabled = true;
+            
+            const datos = {
+                email: document.getElementById('loginEmail').value,
+                password: document.getElementById('loginPassword').value,
+                action: 'login'
+            };
+            
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(datos)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage(`✅ Bienvenido ${data.nombre || ''}`, 'success');
+                    e.target.reset();
+                } else {
+                    showMessage(data.error || '❌ Credenciales incorrectas', 'error');
+                }
+            } catch(error) {
+                showMessage(`❌ Error de conexión: ${error.message}`, 'error');
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+        
+        // Probar conexión automáticamente
+        window.onload = probarConexion;
     </script>
 </body>
 </html>
