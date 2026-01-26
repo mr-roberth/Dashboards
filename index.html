@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Calidad de Cosecha</title>
+    
+    <!-- CDNs con fallbacks -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    
+    <!-- Fallback local para Chart.js si CDN falla -->
+    <script>
+        if (typeof Chart === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"><\/script>');
+        }
+    </script>
+    
+    <style>
+        :root {
+            --verde: #28a745;
+            --amarillo: #ffc107;
+            --rojo: #dc3545;
+            --azul: #007bff;
+            --gris: #6c757d;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        
+        .main-container {
+            display: none;
+            background: #f8f9fa;
+        }
+        
+        .kpi-card {
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+            border: 1px solid #dee2e6;
+        }
+        
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        
+        .kpi-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+        
+        .kpi-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid #dee2e6;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid #dee2e6;
+            overflow-x: auto;
+        }
+        
+        .filter-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid #dee2e6;
+        }
+        
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .good { background: var(--verde); color: white; }
+        .warning { background: var(--amarillo); color: black; }
+        .danger { background: var(--rojo); color: white; }
+        
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            flex-direction: column;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--azul);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-container {
+            display: none;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin: 50px auto;
+            max-width: 600px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .retry-button {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Pantalla de Error -->
+    <div id="errorScreen" class="error-container">
+        <h2><i class="fas fa-exclamation-triangle text-warning"></i> Error de Conexión</h2>
+        <p id="errorMessage">No se pudo conectar con el servidor.</p>
+        <button id="retryConnection" class="btn btn-primary retry-button">
+            <i class="fas fa-redo"></i> Reintentar Conexión
+        </button>
+        <button id="goToLogin" class="btn btn-outline-secondary retry-button">
+            <i class="fas fa-sign-in-alt"></i> Volver al Login
+        </button>
+    </div>
+    
+    <!-- Pantalla de Login -->
+    <div id="loginScreen">
+        <div class="login-container">
+            <h2 class="text-center mb-4">
+                <i class="fas fa-chart-line"></i> Dashboard de Calidad
+            </h2>
+            
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <input type="password" class="form-control" id="password" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                </button>
+                
+                <div class="text-center mt-3">
+                    <a href="#" id="showRegister">¿No tienes cuenta? Regístrate</a>
+                </div>
+            </form>
+            
+            <form id="registerForm" style="display: none;">
+                <div class="mb-3">
+                    <label for="regNombre" class="form-label">Nombre completo</label>
+                    <input type="text" class="form-control" id="regNombre" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="regEmail" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="regEmail" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="regPassword" class="form-label">Contraseña</label>
+                    <input type="password" class="form-control" id="regPassword" required minlength="6">
+                </div>
+                
+                <button type="submit" class="btn btn-success w-100">
+                    <i class="fas fa-user-plus"></i> Registrarse
+                </button>
+                
+                <div class="text-center mt-3">
+                    <a href="#" id="showLogin">¿Ya tienes cuenta? Inicia sesión</a>
+                </div>
+            </form>
+            
+            <div id="loginMessage" class="alert mt-3" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <!-- Pantalla Principal -->
+    <div id="mainScreen" class="main-container">
+        <!-- Navbar -->
+        <nav class="navbar navbar-dark bg-dark">
+            <div class="container-fluid">
+                <span class="navbar-brand">
+                    <i class="fas fa-chart-bar"></i> Dashboard de Calidad de Cosecha
+                </span>
+                <div class="d-flex">
+                    <span class="navbar-text me-3" id="userInfo"></span>
+                    <button class="btn btn-outline-light btn-sm" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i> Salir
+                    </button>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Loading -->
+        <div id="loading">
+            <div class="spinner"></div>
+            <div class="mt-3" id="loadingMessage">Cargando...</div>
+        </div>
+        
+        <div class="container-fluid py-4">
+            <!-- KPIs -->
+            <div class="row mb-4" id="kpiSection">
+                <!-- KPIs dinámicos -->
+            </div>
+            
+            <!-- Filtros -->
+            <div class="filter-section">
+                <h5><i class="fas fa-filter"></i> Filtros</h5>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Ingenio</label>
+                        <select class="form-select" id="filterIngenio">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Grupo de cosecha</label>
+                        <select class="form-select" id="filterGrupoCosecha">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Supervisor de cosecha</label>
+                        <select class="form-select" id="filterSupervisor">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Zona</label>
+                        <select class="form-select" id="filterZona">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Indicador principal</label>
+                        <select class="form-select" id="filterIndicador">
+                            <option value="impurezasTotales">Impurezas totales</option>
+                            <option value="puntaBasura">Punta en basura</option>
+                            <option value="alturaCorte">Altura de corte</option>
+                            <option value="usoBandas">Uso de bandas</option>
+                            <option value="pegadaCorte">Pegada de corte</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Fecha</label>
+                        <input type="date" class="form-control" id="filterFecha">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Semana</label>
+                        <select class="form-select" id="filterSemana">
+                            <option value="">Todas las semanas</option>
+                        </select>
+                    </div>
+                    <div class="col-md-12">
+                        <button class="btn btn-primary" id="applyFilters">
+                            <i class="fas fa-sync-alt"></i> Aplicar Filtros
+                        </button>
+                        <button class="btn btn-outline-secondary" id="clearFilters">
+                            <i class="fas fa-times"></i> Limpiar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Gráficos principales -->
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="chart-container">
+                        <div class="chart-controls">
+                            <h5>Gráfico Principal - Tendencia</h5>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" id="downloadMainPNG">
+                                    <i class="fas fa-download"></i> PNG
+                                </button>
+                                <button class="btn btn-outline-secondary" id="toggleLabelsMain">
+                                    <i class="fas fa-tag"></i> Etiquetas
+                                </button>
+                            </div>
+                        </div>
+                        <canvas id="mainChart" height="300"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="chart-container">
+                        <div class="chart-controls">
+                            <h5>Resumen por Grupo</h5>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" id="downloadResumenPNG">
+                                    <i class="fas fa-download"></i> PNG
+                                </button>
+                            </div>
+                        </div>
+                        <canvas id="resumenChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Gráfico de comparación -->
+            <div class="chart-container mb-4">
+                <div class="chart-controls">
+                    <h5>Comparación de Indicadores</h5>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="compare1" value="impurezasTotales" checked>
+                        <label class="form-check-label" for="compare1">Impurezas</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="compare2" value="puntaBasura" checked>
+                        <label class="form-check-label" for="compare2">Punta en basura</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="compare3" value="alturaCorte" checked>
+                        <label class="form-check-label" for="compare3">Altura corte</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="compare4" value="usoBandas" checked>
+                        <label class="form-check-label" for="compare4">Uso bandas</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="compare5" value="pegadaCorte" checked>
+                        <label class="form-check-label" for="compare5">Pegada corte</label>
+                    </div>
+                </div>
+                <canvas id="comparisonChart" height="250"></canvas>
+            </div>
+            
+            <!-- Tabla de datos -->
+            <div class="table-container mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5>Datos Detallados</h5>
+                    <div>
+                        <button class="btn btn-success btn-sm me-2" id="exportCSV">
+                            <i class="fas fa-file-csv"></i> Exportar CSV
+                        </button>
+                        <button class="btn btn-danger btn-sm" id="generatePDF">
+                            <i class="fas fa-file-pdf"></i> Generar PDF
+                        </button>
+                    </div>
+                </div>
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-striped table-hover" id="dataTable">
+                        <thead>
+                            <tr>
+                                <th>Ingenio</th>
+                                <th>No. Muestra</th>
+                                <th>Fecha</th>
+                                <th>Grupo cosecha</th>
+                                <th>Supervisor</th>
+                                <th>Impurezas</th>
+                                <th>Altura corte</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Datos dinámicos -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================= CONFIGURACIÓN =================
+        const CONFIG = {
+            GAS_URL: 'TU_URL_DEL_APPS_SCRIPT',
+            API_KEY: 'TU_API_KEY_SECRETA', // Opcional
+            RETRY_ATTEMPTS: 3,
+            RETRY_DELAY: 1000,
+            CACHE_TIMEOUT: 300000, // 5 minutos
+            MAX_ROWS: 1000
+        };
+        
+        // ================= ESTADO GLOBAL =================
+        let state = {
+            user: null,
+            currentData: [],
+            charts: {
+                main: null,
+                resumen: null,
+                comparison: null
+            },
+            filters: {},
+            cache: {
+                filterOptions: null,
+                lastUpdate: null
+            },
+            showLabels: true
+        };
+        
+        // ================= MANEJO DE ERRORES =================
+        function showError(message, isFatal = false) {
+            console.error('Error:', message);
+            
+            if (isFatal) {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainScreen').style.display = 'none';
+                
+                const errorScreen = document.getElementById('errorScreen');
+                document.getElementById('errorMessage').textContent = message;
+                errorScreen.style.display = 'block';
+            } else {
+                showMessage(message, 'danger');
+            }
+        }
+        
+        function hideError() {
+            document.getElementById('errorScreen').style.display = 'none';
+        }
+        
+        // ================= UTILIDADES =================
+        function showLoading(message = 'Cargando...') {
+            const loading = document.getElementById('loading');
+            document.getElementById('loadingMessage').textContent = message;
+            loading.style.display = 'flex';
+        }
+        
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+        
+        function showMessage(message, type = 'info') {
+            const alert = document.getElementById('loginMessage');
+            alert.textContent = message;
+            alert.className = `alert alert-${type}`;
+            alert.style.display = 'block';
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+        
+        function getColor(value, indicator = 'impurezas') {
+            const thresholds = {
+                impurezas: { good: 5, warning: 10 },
+                puntaBasura: { good: 1, warning: 3 },
+                alturaCorte: { good: 15, warning: 10 },
+                usoBandas: { good: 3, warning: 2 },
+                pegadaCorte: { good: 4, warning: 3 }
+            };
+            
+            const threshold = thresholds[indicator] || thresholds.impurezas;
+            if (value <= threshold.good) return '#28a745';
+            if (value <= threshold.warning) return '#ffc107';
+            return '#dc3545';
+        }
+        
+        // ================= API CLIENT MEJORADO =================
+        class APIClient {
+            constructor() {
+                this.retryCount = 0;
+            }
+            
+            async request(endpoint, data = {}, method = 'POST') {
+                const url = CONFIG.GAS_URL;
+                
+                const formData = new FormData();
+                formData.append('action', endpoint);
+                
+                // Agregar API key si está configurada
+                if (CONFIG.API_KEY) {
+                    formData.append('api_key', CONFIG.API_KEY);
+                }
+                
+                // Agregar otros datos
+                Object.keys(data).forEach(key => {
+                    if (typeof data[key] === 'object') {
+                        formData.append(key, JSON.stringify(data[key]));
+                    } else {
+                        formData.append(key, data[key]);
+                    }
+                });
+                
+                const options = {
+                    method: method,
+                    body: formData,
+                    mode: 'cors',
+                    cache: 'no-cache'
+                };
+                
+                try {
+                    const response = await this.fetchWithRetry(url, options);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    // Reiniciar contador de reintentos en éxito
+                    this.retryCount = 0;
+                    
+                    return result;
+                } catch (error) {
+                    this.retryCount++;
+                    
+                    if (this.retryCount >= CONFIG.RETRY_ATTEMPTS) {
+                        throw new Error(`Error de conexión después de ${CONFIG.RETRY_ATTEMPTS} intentos: ${error.message}`);
+                    }
+                    
+                    // Esperar y reintentar
+                    await new Promise(resolve => setTimeout(resolve, CONFIG.RETRY_DELAY));
+                    return this.request(endpoint, data, method);
+                }
+            }
+            
+            async fetchWithRetry(url, options, retries = CONFIG.RETRY_ATTEMPTS) {
+                for (let i = 0; i < retries; i++) {
+                    try {
+                        return await fetch(url, options);
+                    } catch (error) {
+                        if (i === retries - 1) throw error;
+                        await new Promise(resolve => setTimeout(resolve, CONFIG.RETRY_DELAY * (i + 1)));
+                    }
+                }
+            }
+            
+            async testConnection() {
+                try {
+                    const response = await fetch(CONFIG.GAS_URL, { method: 'GET' });
+                    return response.ok;
+                } catch (error) {
+                    return false;
+                }
+            }
+        }
+        
+        // Instanciar cliente API
+        const api = new APIClient();
+        
+        // ================= INTERFAZ DE USUARIO =================
+        // Login y Registro
+        document.getElementById('showRegister').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+        });
+        
+        document.getElementById('showLogin').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+        });
+        
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            showLoading('Iniciando sesión...');
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const result = await api.request('login', { email, password });
+                
+                if (result.success) {
+                    state.user = result.user;
+                    localStorage.setItem('user', JSON.stringify(result.user));
+                    
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('mainScreen').style.display = 'block';
+                    document.getElementById('userInfo').textContent = `Hola, ${state.user.nombre}`;
+                    
+                    hideError();
+                    await loadDashboard();
+                } else {
+                    showMessage(result.message, 'danger');
+                }
+            } catch (error) {
+                showError('Error de conexión: ' + error.message, true);
+            }
+            
+            hideLoading();
+        });
+        
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            showLoading('Registrando usuario...');
+            
+            const nombre = document.getElementById('regNombre').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            
+            try {
+                const result = await api.request('register', { nombre, email, password });
+                
+                if (result.success) {
+                    showMessage('Usuario registrado exitosamente. Ahora puedes iniciar sesión.', 'success');
+                    document.getElementById('registerForm').reset();
+                    document.getElementById('registerForm').style.display = 'none';
+                    document.getElementById('loginForm').style.display = 'block';
+                } else {
+                    showMessage(result.message, 'danger');
+                }
+            } catch (error) {
+                showError('Error de conexión: ' + error.message, true);
+            }
+            
+            hideLoading();
+        });
+        
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            state.user = null;
+            localStorage.removeItem('user');
+            document.getElementById('mainScreen').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'block';
+            document.getElementById('loginForm').reset();
+            hideError();
+        });
+        
+        document.getElementById('retryConnection').addEventListener('click', async function() {
+            showLoading('Probando conexión...');
+            hideError();
+            
+            const connected = await api.testConnection();
+            
+            if (connected) {
+                showLoading('Reconectando...');
+                
+                // Intentar restaurar sesión
+                const savedUser = localStorage.getItem('user');
+                if (savedUser) {
+                    try {
+                        state.user = JSON.parse(savedUser);
+                        document.getElementById('loginScreen').style.display = 'none';
+                        document.getElementById('mainScreen').style.display = 'block';
+                        document.getElementById('userInfo').textContent = `Hola, ${state.user.nombre}`;
+                        await loadDashboard();
+                    } catch (e) {
+                        localStorage.removeItem('user');
+                        document.getElementById('mainScreen').style.display = 'none';
+                        document.getElementById('loginScreen').style.display = 'block';
+                    }
+                } else {
+                    document.getElementById('mainScreen').style.display = 'none';
+                    document.getElementById('loginScreen').style.display = 'block';
+                }
+            } else {
+                showError('No se pudo establecer conexión con el servidor', true);
+            }
+            
+            hideLoading();
+        });
+        
+        document.getElementById('goToLogin').addEventListener('click', function() {
+            hideError();
+            document.getElementById('mainScreen').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'block';
+        });
+        
+        // ================= DASHBOARD =================
+        async function loadDashboard() {
+            showLoading('Cargando dashboard...');
+            
+            try {
+                // Cargar opciones de filtro (con cache)
+                const now = Date.now();
+                if (!state.cache.filterOptions || 
+                    !state.cache.lastUpdate || 
+                    (now - state.cache.lastUpdate) > CONFIG.CACHE_TIMEOUT) {
+                    
+                    const options = await api.request('getFilterOptions');
+                    state.cache.filterOptions = options;
+                    state.cache.lastUpdate = now;
+                }
+                
+                fillFilterOptions(state.cache.filterOptions);
+                
+                // Cargar datos iniciales
+                await applyFilters();
+                
+                // Inicializar eventos de controles
+                initChartControls();
+                
+            } catch (error) {
+                showError('Error al cargar dashboard: ' + error.message, true);
+            }
+            
+            hideLoading();
+        }
+        
+        function fillFilterOptions(options) {
+            const fills = {
+                'filterIngenio': options.ingenios || [],
+                'filterGrupoCosecha': options.gruposCosecha || [],
+                'filterSupervisor': options.supervisores || [],
+                'filterZona': options.zonas || [],
+                'filterSemana': options.semanas || []
+            };
+            
+            Object.keys(fills).forEach(selectId => {
+                const select = document.getElementById(selectId);
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">Todos</option>';
+                
+                fills[selectId].forEach(option => {
+                    const opt = document.createElement('option');
+                    opt.value = option;
+                    opt.textContent = option;
+                    select.appendChild(opt);
+                });
+                
+                // Restaurar valor seleccionado si existe
+                if (currentValue) {
+                    select.value = currentValue;
+                }
+            });
+        }
+        
+        // Filtros
+        document.getElementById('applyFilters').addEventListener('click', applyFilters);
+        document.getElementById('clearFilters').addEventListener('click', function() {
+            document.getElementById('filterIngenio').value = '';
+            document.getElementById('filterGrupoCosecha').value = '';
+            document.getElementById('filterSupervisor').value = '';
+            document.getElementById('filterZona').value = '';
+            document.getElementById('filterFecha').value = '';
+            document.getElementById('filterSemana').value = '';
+            applyFilters();
+        });
+        
+        async function applyFilters() {
+            showLoading('Aplicando filtros...');
+            
+            state.filters = {
+                ingenio: document.getElementById('filterIngenio').value,
+                grupoCosecha: document.getElementById('filterGrupoCosecha').value,
+                supervisorCosecha: document.getElementById('filterSupervisor').value,
+                zona: document.getElementById('filterZona').value,
+                fecha: document.getElementById('filterFecha').value,
+                semana: document.getElementById('filterSemana').value
+            };
+            
+            try {
+                const result = await api.request('getKPIs', { filters: state.filters });
+                
+                if (result.success !== false) {
+                    state.currentData = result.datosFiltrados || [];
+                    updateDashboard(result);
+                } else {
+                    throw new Error(result.message || 'Error al obtener datos');
+                }
+            } catch (error) {
+                showError('Error al aplicar filtros: ' + error.message);
+            }
+            
+            hideLoading();
+        }
+        
+        function updateDashboard(data) {
+            updateKPIs(data);
+            updateCharts(data);
+            updateTable();
+        }
+        
+        function updateKPIs(data) {
+            const kpis = [
+                { id: 'Muestras totales', value: data.totalMuestras || 0, suffix: '', indicator: 'impurezas' },
+                { id: 'Impurezas totales', value: data.impurezasTotales || 0, suffix: '%', indicator: 'impurezas' },
+                { id: 'Punta en basura', value: data.puntaBasura || 0, suffix: ' kg', indicator: 'puntaBasura' },
+                { id: 'Altura de corte', value: data.alturaCorte || 0, suffix: ' cm', indicator: 'alturaCorte' },
+                { id: 'Uso de bandas', value: data.usoBandas || 0, suffix: '', indicator: 'usoBandas' },
+                { id: 'Pegada de corte', value: data.pegadaCorte || 0, suffix: '', indicator: 'pegadaCorte' }
+            ];
+            
+            const kpiSection = document.getElementById('kpiSection');
+            kpiSection.innerHTML = '';
+            
+            kpis.forEach(kpi => {
+                const col = document.createElement('div');
+                col.className = 'col-md-2';
+                
+                const color = getColor(kpi.value, kpi.indicator);
+                
+                col.innerHTML = `
+                    <div class="kpi-card" style="border-left: 5px solid ${color}">
+                        <div class="kpi-label">${kpi.id}</div>
+                        <div class="kpi-value" style="color: ${color}">
+                            ${typeof kpi.value === 'number' ? kpi.value.toFixed(2) : kpi.value}${kpi.suffix}
+                        </div>
+                    </div>
+                `;
+                
+                kpiSection.appendChild(col);
+            });
+        }
+        
+        function updateCharts(data) {
+            updateMainChart(data);
+            updateResumenChart(data);
+            updateComparisonChart(data);
+        }
+        
+        function updateMainChart(data) {
+            const ctx = document.getElementById('mainChart');
+            if (!ctx) return;
+            
+            const indicador = document.getElementById('filterIndicador').value;
+            
+            // Agrupar por fecha
+            const groupedData = {};
+            state.currentData.forEach(item => {
+                const fecha = item.Fecha;
+                if (!fecha) return;
+                
+                if (!groupedData[fecha]) {
+                    groupedData[fecha] = [];
+                }
+                
+                let valor = 0;
+                switch(indicador) {
+                    case 'impurezasTotales':
+                        valor = [
+                            parseFloat(item['% Picada']) || 0,
+                            parseFloat(item['% Mamones']) || 0,
+                            parseFloat(item['% Lalas']) || 0,
+                            parseFloat(item['% Tallos secos']) || 0,
+                            parseFloat(item['% Tallos dañados']) || 0,
+                            parseFloat(item['% Raices adheridas']) || 0,
+                            parseFloat(item['% Punta']) || 0,
+                            parseFloat(item['% Tierra']) || 0,
+                            parseFloat(item['% Piedra']) || 0
+                        ].reduce((a, b) => a + b, 0);
+                        break;
+                    case 'puntaBasura':
+                        valor = parseFloat(item['Punta en basura (Kg)']) || 0;
+                        break;
+                    case 'alturaCorte':
+                        valor = parseFloat(item['Altura del corte (cm)']) || 0;
+                        break;
+                    case 'usoBandas':
+                        valor = parseFloat(item['Uso de bandas']) || 0;
+                        break;
+                    case 'pegadaCorte':
+                        valor = parseFloat(item['Pegada de corte (n°)']) || 0;
+                        break;
+                }
+                
+                groupedData[fecha].push(valor);
+            });
+            
+            const fechas = Object.keys(groupedData).sort();
+            const promedios = fechas.map(fecha => {
+                const valores = groupedData[fecha];
+                return valores.reduce((a, b) => a + b, 0) / valores.length;
+            });
+            
+            const ultimoValor = promedios.length > 0 ? promedios[promedios.length - 1] : 0;
+            const lineColor = getColor(ultimoValor, indicador);
+            
+            if (state.charts.main) {
+                state.charts.main.destroy();
+            }
+            
+            state.charts.main = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: fechas,
+                    datasets: [{
+                        label: indicador,
+                        data: promedios,
+                        borderColor: lineColor,
+                        backgroundColor: lineColor + '20',
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: lineColor,
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        datalabels: {
+                            display: state.showLabels,
+                            color: '#666',
+                            anchor: 'end',
+                            align: 'top',
+                            formatter: (value) => value.toFixed(2)
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+        
+        function updateResumenChart(data) {
+            const ctx = document.getElementById('resumenChart');
+            if (!ctx) return;
+            
+            // Agrupar por grupo de cosecha
+            const grupos = {};
+            state.currentData.forEach(item => {
+                const grupo = item['Grupo de cosecha'] || 'Sin grupo';
+                if (!grupos[grupo]) {
+                    grupos[grupo] = [];
+                }
+                
+                const impurezas = [
+                    parseFloat(item['% Picada']) || 0,
+                    parseFloat(item['% Mamones']) || 0,
+                    parseFloat(item['% Lalas']) || 0,
+                    parseFloat(item['% Tallos secos']) || 0,
+                    parseFloat(item['% Tallos dañados']) || 0,
+                    parseFloat(item['% Raices adheridas']) || 0,
+                    parseFloat(item['% Punta']) || 0,
+                    parseFloat(item['% Tierra']) || 0,
+                    parseFloat(item['% Piedra']) || 0
+                ].reduce((a, b) => a + b, 0);
+                
+                grupos[grupo].push(impurezas);
+            });
+            
+            const labels = Object.keys(grupos).slice(0, 10); // Limitar a 10 grupos
+            const promedios = labels.map(grupo => {
+                const valores = grupos[grupo];
+                return valores.reduce((a, b) => a + b, 0) / valores.length;
+            });
+            
+            const colors = promedios.map(p => getColor(p, 'impurezas'));
+            
+            if (state.charts.resumen) {
+                state.charts.resumen.destroy();
+            }
+            
+            state.charts.resumen = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Impurezas promedio',
+                        data: promedios,
+                        backgroundColor: colors,
+                        borderColor: colors.map(c => c.replace('0.8', '1')),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        datalabels: {
+                            display: state.showLabels,
+                            color: '#fff',
+                            font: {
+                                weight: 'bold'
+                            },
+                            anchor: 'end',
+                            align: 'right',
+                            formatter: (value) => value.toFixed(1) + '%'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: {
+                                drawBorder: false
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                },
+                plugins: [ChartDataLabels]
+            });
+        }
+        
+        function updateComparisonChart(data) {
+            const ctx = document.getElementById('comparisonChart');
+            if (!ctx) return;
+            
+            const checkboxes = ['compare1', 'compare2', 'compare3', 'compare4', 'compare5'];
+            const datasets = [];
+            const labelsMap = {
+                impurezasTotales: 'Impurezas totales',
+                puntaBasura: 'Punta en basura',
+                alturaCorte: 'Altura de corte',
+                usoBandas: 'Uso de bandas',
+                pegadaCorte: 'Pegada de corte'
+            };
+            
+            checkboxes.forEach(checkboxId => {
+                const checkbox = document.getElementById(checkboxId);
+                if (checkbox && checkbox.checked) {
+                    const indicador = checkbox.value;
+                    const valor = data[indicador] || 0;
+                    
+                    datasets.push({
+                        label: labelsMap[indicador],
+                        data: [valor],
+                        backgroundColor: getColor(valor, indicador),
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    });
+                }
+            });
+            
+            if (state.charts.comparison) {
+                state.charts.comparison.destroy();
+            }
+            
+            if (datasets.length > 0) {
+                state.charts.comparison = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Comparación'],
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    drawBorder: false
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function updateTable() {
+            const tbody = document.getElementById('tableBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            const dataToShow = state.currentData.slice(0, CONFIG.MAX_ROWS);
+            
+            dataToShow.forEach(item => {
+                const impurezas = [
+                    parseFloat(item['% Picada']) || 0,
+                    parseFloat(item['% Mamones']) || 0,
+                    parseFloat(item['% Lalas']) || 0,
+                    parseFloat(item['% Tallos secos']) || 0,
+                    parseFloat(item['% Tallos dañados']) || 0,
+                    parseFloat(item['% Raices adheridas']) || 0,
+                    parseFloat(item['% Punta']) || 0,
+                    parseFloat(item['% Tierra']) || 0,
+                    parseFloat(item['% Piedra']) || 0
+                ].reduce((a, b) => a + b, 0);
+                
+                const statusClass = impurezas <= 5 ? 'good' : impurezas <= 10 ? 'warning' : 'danger';
+                const statusText = impurezas <= 5 ? 'Bueno' : impurezas <= 10 ? 'Advertencia' : 'Crítico';
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.Ingenio || ''}</td>
+                    <td>${item['No. Muestra'] || ''}</td>
+                    <td>${item.Fecha || ''}</td>
+                    <td>${item['Grupo de cosecha'] || ''}</td>
+                    <td>${item['Supervisor de cosecha'] || ''}</td>
+                    <td>${impurezas.toFixed(2)}%</td>
+                    <td>${item['Altura del corte (cm)'] || ''}</td>
+                    <td>
+                        <span class="status-badge ${statusClass}">
+                            ${statusText}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Mostrar contador si hay muchos datos
+            if (state.currentData.length > CONFIG.MAX_ROWS) {
+                const infoRow = document.createElement('tr');
+                infoRow.innerHTML = `
+                    <td colspan="8" class="text-center text-muted">
+                        Mostrando ${CONFIG.MAX_ROWS} de ${state.currentData.length} registros
+                    </td>
+                `;
+                tbody.appendChild(infoRow);
+            }
+        }
+        
+        // ================= CONTROLES DE GRÁFICOS =================
+        function initChartControls() {
+            // Toggle labels
+            document.getElementById('toggleLabelsMain').addEventListener('click', function() {
+                state.showLabels = !state.showLabels;
+                applyFilters();
+            });
+            
+            // Descargar gráficos como PNG
+            document.getElementById('downloadMainPNG').addEventListener('click', function() {
+                if (state.charts.main) {
+                    const link = document.createElement('a');
+                    link.download = 'grafico_principal_' + new Date().toISOString().split('T')[0] + '.png';
+                    link.href = state.charts.main.toBase64Image();
+                    link.click();
+                }
+            });
+            
+            document.getElementById('downloadResumenPNG').addEventListener('click', function() {
+                if (state.charts.resumen) {
+                    const link = document.createElement('a');
+                    link.download = 'grafico_resumen_' + new Date().toISOString().split('T')[0] + '.png';
+                    link.href = state.charts.resumen.toBase64Image();
+                    link.click();
+                }
+            });
+            
+            // Exportar CSV
+            document.getElementById('exportCSV').addEventListener('click', async function() {
+                showLoading('Generando CSV...');
+                
+                try {
+                    const result = await api.request('exportData', { filters: state.filters });
+                    
+                    if (result.success && result.data) {
+                        const blob = new Blob([result.data], { type: 'text/csv;charset=utf-8;' });
+                        const link = document.createElement('a');
+                        const url = URL.createObjectURL(blob);
+                        
+                        link.setAttribute('href', url);
+                        link.setAttribute('download', `datos_cosecha_${new Date().toISOString().split('T')[0]}.csv`);
+                        link.style.visibility = 'hidden';
+                        
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    } else {
+                        throw new Error(result.message || 'Error al exportar');
+                    }
+                } catch (error) {
+                    showError('Error al exportar CSV: ' + error.message);
+                }
+                
+                hideLoading();
+            });
+            
+            // Generar PDF
+            document.getElementById('generatePDF').addEventListener('click', function() {
+                showLoading('Generando PDF...');
+                
+                // Implementación básica de PDF usando html2canvas y jsPDF
+                try {
+                    import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
+                        .then(() => {
+                            return import('https://html2canvas.hertzen.com/dist/html2canvas.min.js');
+                        })
+                        .then(() => {
+                            const { jsPDF } = window.jspdf;
+                            
+                            html2canvas(document.getElementById('mainScreen')).then(canvas => {
+                                const imgData = canvas.toDataURL('image/png');
+                                const pdf = new jsPDF('p', 'mm', 'a4');
+                                const imgWidth = 190;
+                                const pageHeight = 295;
+                                const imgHeight = canvas.height * imgWidth / canvas.width;
+                                let heightLeft = imgHeight;
+                                let position = 10;
+                                
+                                pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                                heightLeft -= pageHeight;
+                                
+                                while (heightLeft >= 0) {
+                                    position = heightLeft - imgHeight;
+                                    pdf.addPage();
+                                    pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                                    heightLeft -= pageHeight;
+                                }
+                                
+                                pdf.save(`informe_cosecha_${new Date().toISOString().split('T')[0]}.pdf`);
+                                hideLoading();
+                            });
+                        })
+                        .catch(error => {
+                            showError('Error al cargar librerías PDF: ' + error.message);
+                            hideLoading();
+                        });
+                } catch (error) {
+                    showError('Error al generar PDF: ' + error.message);
+                    hideLoading();
+                }
+            });
+        }
+        
+        // ================= INICIALIZACIÓN =================
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Probar conexión inicial
+            showLoading('Probando conexión...');
+            
+            const connected = await api.testConnection();
+            
+            if (connected) {
+                // Verificar si hay usuario guardado
+                const savedUser = localStorage.getItem('user');
+                if (savedUser) {
+                    try {
+                        state.user = JSON.parse(savedUser);
+                        document.getElementById('loginScreen').style.display = 'none';
+                        document.getElementById('mainScreen').style.display = 'block';
+                        document.getElementById('userInfo').textContent = `Hola, ${state.user.nombre}`;
+                        hideError();
+                        await loadDashboard();
+                    } catch (e) {
+                        localStorage.removeItem('user');
+                        hideLoading();
+                    }
+                } else {
+                    hideLoading();
+                }
+            } else {
+                showError('No se pudo establecer conexión con el servidor', true);
+                hideLoading();
+            }
+        });
+        
+        // Heartbeat para mantener la conexión
+        setInterval(async () => {
+            try {
+                await api.testConnection();
+            } catch (error) {
+                console.log('Heartbeat falló:', error.message);
+            }
+        }, 300000); // Cada 5 minutos
+    </script>
+</body>
+</html>
