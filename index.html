@@ -925,998 +925,968 @@
     </footer>
 
     <script>
-        // Configuración global
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxXogeMr6tsb_8h9Ql6T69Wpf04IhKi_GL7gB54PVblGMxzPFpCUkSOfJlepOEKe-Nb/exec';
-        let currentUser = null;
-        let allData = [];
-        let filteredData = [];
-        let charts = {};
-        let filterOptions = {};
+    // Configuración global
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxXogeMr6tsb_8h9Ql6T69Wpf04IhKi_GL7gB54PVblGMxzPFpCUkSOfJlepOEKe-Nb/exec';
+    let currentUser = null;
+    let allData = [];
+    let filteredData = [];
+    let charts = {};
+    let filterOptions = {};
 
-        // Inicialización
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeAuth();
-            initializeFilters();
-            initializeCharts();
-            loadInitialData();
-        });
-
-        // Sistema de Autenticación
-        function initializeAuth() {
-            const loginBtn = document.getElementById('loginBtn');
-            const registerBtn = document.getElementById('registerBtn');
-            const loginForm = document.getElementById('loginForm');
-            const registerForm = document.getElementById('registerForm');
-            const showRegister = document.getElementById('showRegister');
-            const showLogin = document.getElementById('showLogin');
-            const submitLogin = document.getElementById('submitLogin');
-            const submitRegister = document.getElementById('submitRegister');
-            const mainContent = document.getElementById('mainContent');
-
-            // Mostrar formulario de login
-            loginBtn.addEventListener('click', () => {
-                loginForm.classList.add('active');
-                registerForm.classList.remove('active');
-            });
-
-            // Mostrar formulario de registro
-            registerBtn.addEventListener('click', () => {
-                registerForm.classList.add('active');
-                loginForm.classList.remove('active');
-            });
-
-            // Cambiar a registro
-            showRegister.addEventListener('click', (e) => {
-                e.preventDefault();
-                registerForm.classList.add('active');
-                loginForm.classList.remove('active');
-            });
-
-            // Cambiar a login
-            showLogin.addEventListener('click', (e) => {
-                e.preventDefault();
-                loginForm.classList.add('active');
-                registerForm.classList.remove('active');
-            });
-
-            // Enviar login
-            submitLogin.addEventListener('click', async () => {
-                const email = document.getElementById('loginEmail').value;
-                const password = document.getElementById('loginPassword').value;
-                const alertDiv = document.getElementById('loginAlert');
-
-                if (!email || !password) {
-                    showAlert(alertDiv, 'Por favor completa todos los campos', 'error');
-                    return;
-                }
-
-                showAlert(alertDiv, 'Verificando credenciales...', 'info');
-
-                try {
-                    const response = await fetch(GAS_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: new URLSearchParams({
-                            action: 'login',
-                            email: email,
-                            password: password
-                        })
-                    });
-
-                    const data = await response.json();
-
-                    if (data.success) {
-                        currentUser = data.user;
-                        showAlert(alertDiv, '¡Login exitoso!', 'success');
-                        
-                        // Ocultar formularios, mostrar contenido principal
-                        loginForm.classList.remove('active');
-                        registerForm.classList.remove('active');
-                        mainContent.classList.add('active');
-                        
-                        // Cargar datos
-                        loadInitialData();
-                    } else {
-                        showAlert(alertDiv, data.message || 'Error en el login', 'error');
-                    }
-                } catch (error) {
-                    showAlert(alertDiv, 'Error de conexión: ' + error.message, 'error');
-                }
-            });
-
-           // Enviar registro - VERSIÓN MEJORADA
-submitRegister.addEventListener('click', async () => {
-  const email = document.getElementById('registerEmail').value;
-  const password = document.getElementById('registerPassword').value;
-  const confirm = document.getElementById('registerConfirm').value;
-  const alertDiv = document.getElementById('registerAlert');
-
-  if (!email || !password || !confirm) {
-    showAlert(alertDiv, 'Por favor completa todos los campos', 'error');
-    return;
-  }
-
-  if (password !== confirm) {
-    showAlert(alertDiv, 'Las contraseñas no coinciden', 'error');
-    return;
-  }
-
-  if (password.length < 6) {
-    showAlert(alertDiv, 'La contraseña debe tener al menos 6 caracteres', 'error');
-    return;
-  }
-
-  showAlert(alertDiv, 'Creando cuenta...', 'info');
-  
-  // Mostrar datos que se enviarán
-  console.log('Enviando registro:', { email, passwordLength: password.length });
-
-  try {
-    // Crear parámetros de forma más robusta
-    const params = new URLSearchParams();
-    params.append('action', 'register');
-    params.append('email', email);
-    params.append('password', password);
-    
-    console.log('URL de destino:', GAS_URL);
-    console.log('Parámetros:', params.toString());
-
-    // Configurar timeout y opciones más robustas
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-
-    const response = await fetch(GAS_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        'Accept': 'application/json'
-      },
-      body: params,
-      signal: controller.signal,
-      mode: 'cors'
+    // Inicialización
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeAuth();
+        // Los gráficos y filtros se inicializan después del login
     });
 
-    clearTimeout(timeoutId);
+    // ==================== SISTEMA DE AUTENTICACIÓN ====================
+    function initializeAuth() {
+        const loginBtn = document.getElementById('loginBtn');
+        const registerBtn = document.getElementById('registerBtn');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const showRegister = document.getElementById('showRegister');
+        const showLogin = document.getElementById('showLogin');
+        const submitLogin = document.getElementById('submitLogin');
+        const submitRegister = document.getElementById('submitRegister');
 
-    console.log('Respuesta recibida. Status:', response.status);
-    console.log('Headers:', JSON.stringify([...response.headers]));
+        // Mostrar formulario de login
+        loginBtn.addEventListener('click', () => {
+            loginForm.classList.add('active');
+            registerForm.classList.remove('active');
+        });
 
-    // Verificar si la respuesta es JSON
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      const text = await response.text();
-      console.error('Respuesta no es JSON:', text.substring(0, 500));
-      throw new Error(`Respuesta no es JSON: ${text.substring(0, 100)}`);
+        // Mostrar formulario de registro
+        registerBtn.addEventListener('click', () => {
+            registerForm.classList.add('active');
+            loginForm.classList.remove('active');
+        });
+
+        // Cambiar a registro
+        showRegister.addEventListener('click', (e) => {
+            e.preventDefault();
+            registerForm.classList.add('active');
+            loginForm.classList.remove('active');
+        });
+
+        // Cambiar a login
+        showLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginForm.classList.add('active');
+            registerForm.classList.remove('active');
+        });
+
+        // Enviar login
+        submitLogin.addEventListener('click', handleLogin);
+
+        // Enviar registro - SOLO ESTE MANEJADOR, NO HAY OTRO
+        submitRegister.addEventListener('click', handleRegister);
     }
 
-    const data = await response.json();
-    console.log('Datos de respuesta:', data);
+    async function handleLogin() {
+        const email = document.getElementById('loginEmail').value;
+        const password = document.getElementById('loginPassword').value;
+        const alertDiv = document.getElementById('loginAlert');
 
-    if (data.success) {
-      showAlert(alertDiv, '¡Cuenta creada exitosamente! Ahora puedes iniciar sesión.', 'success');
-      
-      // Cambiar a formulario de login
-      setTimeout(() => {
-        registerForm.classList.remove('active');
-        loginForm.classList.add('active');
-        document.getElementById('loginEmail').value = email;
-        document.getElementById('loginPassword').value = '';
-        document.getElementById('registerEmail').value = '';
-        document.getElementById('registerPassword').value = '';
-        document.getElementById('registerConfirm').value = '';
-      }, 2000);
-    } else {
-      showAlert(alertDiv, `Error: ${data.message || 'Error desconocido'}`, 'error');
-      console.error('Error del servidor:', data);
-    }
-    
-  } catch (error) {
-    console.error('Error completo:', error);
-    
-    let errorMessage = 'Error de conexión: ';
-    
-    if (error.name === 'AbortError') {
-      errorMessage += 'Tiempo de espera agotado (30 segundos)';
-    } else if (error.message.includes('Failed to fetch')) {
-      errorMessage += 'No se pudo conectar con el servidor. Verifica:';
-      errorMessage += '<br>1. URL del GAS es correcta';
-      errorMessage += '<br>2. El GAS está desplegado correctamente';
-      errorMessage += '<br>3. No hay bloqueos de CORS';
-    } else {
-      errorMessage += error.message;
-    }
-    
-    showAlert(alertDiv, errorMessage, 'error');
-  }
-});
-                        
-                        // Cambiar a formulario de login después de 2 segundos
-                        setTimeout(() => {
-                            registerForm.classList.remove('active');
-                            loginForm.classList.add('active');
-                            document.getElementById('loginEmail').value = email;
-                            document.getElementById('loginPassword').value = '';
-                            document.getElementById('registerEmail').value = '';
-                            document.getElementById('registerPassword').value = '';
-                            document.getElementById('registerConfirm').value = '';
-                        }, 2000);
-                    } else {
-                        showAlert(alertDiv, data.message || 'Error en el registro', 'error');
-                    }
-                } catch (error) {
-                    showAlert(alertDiv, 'Error de conexión: ' + error.message, 'error');
-                }
+        if (!email || !password) {
+            showAlert(alertDiv, 'Por favor completa todos los campos', 'error');
+            return;
+        }
+
+        showAlert(alertDiv, 'Verificando credenciales...', 'info');
+        console.log('Iniciando login para:', email);
+
+        try {
+            const params = new URLSearchParams();
+            params.append('action', 'login');
+            params.append('email', email);
+            params.append('password', password);
+
+            const response = await fetch(GAS_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                },
+                body: params
             });
-        }
 
-        // Mostrar alertas
-        function showAlert(element, message, type) {
-            element.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-                ${message}
-            `;
-            element.className = `alert alert-${type}`;
-            element.style.display = 'flex';
-        }
+            console.log('Respuesta recibida. Status:', response.status);
 
-        // Cargar datos iniciales
-        async function loadInitialData() {
-            try {
-                const response = await fetch(`${GAS_URL}?action=getInitialData&timestamp=${Date.now()}`);
-                const data = await response.json();
-
-                if (data.success) {
-                    filterOptions = data.filterOptions;
-                    allData = data.data || [];
-                    filteredData = [...allData];
-                    
-                    updateKPI(data.kpis);
-                    updateFilterOptions();
-                    updateCharts();
-                    updateDataTable();
-                }
-            } catch (error) {
-                console.error('Error cargando datos iniciales:', error);
+            // Verificar si la respuesta es JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('Respuesta no es JSON:', text.substring(0, 500));
+                throw new Error(`El servidor no respondió con JSON: ${text.substring(0, 100)}`);
             }
-        }
 
-        // Actualizar KPIs
-        function updateKPI(kpis) {
-            document.getElementById('totalSamples').textContent = kpis.muestrasTotales.toLocaleString();
-            document.getElementById('impuritiesAvg').textContent = kpis.impurezasPromedio.toFixed(2) + '%';
-            document.getElementById('cutHeightAvg').textContent = kpis.alturaPromedio.toFixed(1) + 'cm';
-            document.getElementById('bandsUsageAvg').textContent = kpis.bandasPromedio.toFixed(1);
-            
-            // Actualizar tendencias
-            updateTrendColors('impuritiesTrend', kpis.impurezasPromedio, 2, 5);
-            updateTrendColors('heightTrend', kpis.alturaPromedio, 15, 20);
-        }
+            const data = await response.json();
+            console.log('Datos de respuesta login:', data);
 
-        // Actualizar colores de tendencia
-        function updateTrendColors(elementId, value, warningThreshold, dangerThreshold) {
-            const element = document.getElementById(elementId);
-            if (value <= warningThreshold) {
-                element.style.background = '#d1fae5';
-                element.style.color = '#059669';
-            } else if (value <= dangerThreshold) {
-                element.style.background = '#fef3c7';
-                element.style.color = '#d97706';
+            if (data.success) {
+                currentUser = data.user;
+                showAlert(alertDiv, '¡Login exitoso!', 'success');
+                
+                // Ocultar formularios, mostrar contenido principal
+                document.getElementById('loginForm').classList.remove('active');
+                document.getElementById('registerForm').classList.remove('active');
+                document.getElementById('mainContent').classList.add('active');
+                
+                // Cargar datos
+                loadInitialData();
             } else {
-                element.style.background = '#fee2e2';
-                element.style.color = '#dc2626';
+                showAlert(alertDiv, data.message || 'Error en el login', 'error');
             }
-        }
-
-        // Actualizar opciones de filtro
-        function updateFilterOptions() {
-            updateSelectOptions('filterIngenio', ['Todos', ...filterOptions.ingenios || []]);
-            updateSelectOptions('filterZona', ['Todos', ...filterOptions.zonas || []]);
-            updateSelectOptions('filterGrupo', ['Todos', ...filterOptions.grupos || []]);
-            updateSelectOptions('filterSupervisor', ['Todos', ...filterOptions.supervisores || []]);
+        } catch (error) {
+            console.error('Error en login:', error);
+            let errorMessage = 'Error de conexión: ';
             
-            // Configurar eventos de filtro
-            document.getElementById('applyFilters').addEventListener('click', applyFilters);
-            document.getElementById('resetFilters').addEventListener('click', resetFilters);
-            document.getElementById('generateReport').addEventListener('click', generatePDFReport);
-        }
-
-        // Actualizar opciones de select
-        function updateSelectOptions(selectId, options) {
-            const select = document.getElementById(selectId);
-            select.innerHTML = '';
-            options.forEach(option => {
-                const opt = document.createElement('option');
-                opt.value = option;
-                opt.textContent = option;
-                select.appendChild(opt);
-            });
-        }
-
-        // Aplicar filtros
-        async function applyFilters() {
-            const filters = {
-                ingenio: document.getElementById('filterIngenio').value,
-                zona: document.getElementById('filterZona').value,
-                grupo: document.getElementById('filterGrupo').value,
-                supervisor: document.getElementById('filterSupervisor').value
-            };
-
-            try {
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: new URLSearchParams({
-                        action: 'filterData',
-                        ...filters
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    filteredData = data.data;
-                    updateCharts();
-                    updateDataTable();
-                    
-                    // Recalcular KPIs para datos filtrados
-                    const kpis = calculateFilteredKPIs();
-                    updateKPI(kpis);
-                }
-            } catch (error) {
-                console.error('Error aplicando filtros:', error);
+            if (error.name === 'AbortError') {
+                errorMessage += 'Tiempo de espera agotado';
+            } else if (error.message.includes('Failed to fetch')) {
+                errorMessage += 'No se pudo conectar con el servidor. Verifica:<br>';
+                errorMessage += '1. Que la URL del GAS sea correcta<br>';
+                errorMessage += '2. Que el GAS esté desplegado como aplicación web<br>';
+                errorMessage += '3. Que tengas conexión a internet';
+            } else {
+                errorMessage += error.message;
             }
+            
+            showAlert(alertDiv, errorMessage, 'error');
+        }
+    }
+
+    async function handleRegister() {
+        const email = document.getElementById('registerEmail').value;
+        const password = document.getElementById('registerPassword').value;
+        const confirm = document.getElementById('registerConfirm').value;
+        const alertDiv = document.getElementById('registerAlert');
+
+        if (!email || !password || !confirm) {
+            showAlert(alertDiv, 'Por favor completa todos los campos', 'error');
+            return;
         }
 
-        // Calcular KPIs para datos filtrados
-        function calculateFilteredKPIs() {
-            if (filteredData.length === 0) {
-                return {
-                    muestrasTotales: 0,
-                    impurezasPromedio: 0,
-                    alturaPromedio: 0,
-                    bandasPromedio: 0,
-                    pegadaPromedio: 0,
-                    puntaBasuraPromedio: 0
-                };
-            }
+        if (password !== confirm) {
+            showAlert(alertDiv, 'Las contraseñas no coinciden', 'error');
+            return;
+        }
 
-            let impurezasSum = 0;
-            let alturaSum = 0;
-            let bandasSum = 0;
-            let pegadaSum = 0;
-            let puntaBasuraSum = 0;
+        if (password.length < 6) {
+            showAlert(alertDiv, 'La contraseña debe tener al menos 6 caracteres', 'error');
+            return;
+        }
 
-            filteredData.forEach(row => {
-                // Sumar impurezas (ejemplo simplificado)
-                impurezasSum += (parseFloat(row['% Picada']) || 0) + 
-                               (parseFloat(row['% Mamones']) || 0);
-                alturaSum += parseFloat(row['Altura del corte (cm)']) || 0;
-                bandasSum += parseInt(row['Uso de bandas']) || 0;
-                pegadaSum += parseInt(row['Pegada de corte (n°)']) || 0;
-                puntaBasuraSum += parseFloat(row['Punta en basura (Kg)']) || 0;
+        showAlert(alertDiv, 'Creando cuenta...', 'info');
+        console.log('Enviando registro para:', email);
+
+        try {
+            const params = new URLSearchParams();
+            params.append('action', 'register');
+            params.append('email', email);
+            params.append('password', password);
+
+            // Configurar timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+            const response = await fetch(GAS_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                },
+                body: params,
+                signal: controller.signal
             });
 
-            return {
-                muestrasTotales: filteredData.length,
-                impurezasPromedio: impurezasSum / filteredData.length / 2,
-                alturaPromedio: alturaSum / filteredData.length,
-                bandasPromedio: bandasSum / filteredData.length,
-                pegadaPromedio: pegadaSum / filteredData.length,
-                puntaBasuraPromedio: puntaBasuraSum / filteredData.length
-            };
-        }
+            clearTimeout(timeoutId);
+            console.log('Respuesta recibida. Status:', response.status);
 
-        // Restablecer filtros
-        function resetFilters() {
-            document.getElementById('filterIngenio').value = 'Todos';
-            document.getElementById('filterZona').value = 'Todos';
-            document.getElementById('filterGrupo').value = 'Todos';
-            document.getElementById('filterSupervisor').value = 'Todos';
-            document.getElementById('filterIndicator').value = 'impurezas';
-            document.getElementById('filterTime').value = 'dia';
+            // Verificar si la respuesta es JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await response.text();
+                console.error('Respuesta no es JSON:', text.substring(0, 500));
+                throw new Error(`El servidor no respondió con JSON: ${text.substring(0, 100)}`);
+            }
+
+            const data = await response.json();
+            console.log('Datos de respuesta registro:', data);
+
+            if (data.success) {
+                showAlert(alertDiv, '¡Cuenta creada exitosamente! Ahora puedes iniciar sesión.', 'success');
+                
+                // Cambiar a formulario de login
+                setTimeout(() => {
+                    document.getElementById('registerForm').classList.remove('active');
+                    document.getElementById('loginForm').classList.add('active');
+                    document.getElementById('loginEmail').value = email;
+                    document.getElementById('loginPassword').value = '';
+                    document.getElementById('registerEmail').value = '';
+                    document.getElementById('registerPassword').value = '';
+                    document.getElementById('registerConfirm').value = '';
+                }, 2000);
+            } else {
+                showAlert(alertDiv, `Error: ${data.message || 'Error desconocido'}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error en registro:', error);
+            let errorMessage = 'Error de conexión: ';
             
-            filteredData = [...allData];
-            updateCharts();
-            updateDataTable();
+            if (error.name === 'AbortError') {
+                errorMessage += 'Tiempo de espera agotado (30 segundos)';
+            } else if (error.message.includes('Failed to fetch')) {
+                errorMessage += 'No se pudo conectar con el servidor. Posibles causas:<br>';
+                errorMessage += '1. URL del GAS incorrecta<br>';
+                errorMessage += '2. GAS no desplegado correctamente<br>';
+                errorMessage += '3. Bloqueo de CORS (usa la solución de abajo)';
+            } else {
+                errorMessage += error.message;
+            }
             
-            // Restaurar KPIs originales
-            if (allData.length > 0) {
+            showAlert(alertDiv, errorMessage, 'error');
+        }
+    }
+
+    function showAlert(element, message, type) {
+        element.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+            ${message}
+        `;
+        element.className = `alert alert-${type}`;
+        element.style.display = 'flex';
+    }
+
+    // ==================== CARGA DE DATOS Y FILTROS ====================
+    async function loadInitialData() {
+        try {
+            console.log('Cargando datos iniciales...');
+            const response = await fetch(`${GAS_URL}?action=getInitialData&timestamp=${Date.now()}`);
+            const data = await response.json();
+
+            if (data.success) {
+                filterOptions = data.filterOptions;
+                allData = data.data || [];
+                filteredData = [...allData];
+                
+                updateKPI(data.kpis);
+                updateFilterOptions();
+                initializeCharts();
+                updateCharts();
+                updateDataTable();
+                console.log('Datos cargados exitosamente');
+            }
+        } catch (error) {
+            console.error('Error cargando datos iniciales:', error);
+            showAlert(document.getElementById('loginAlert'), 'Error cargando datos: ' + error.message, 'error');
+        }
+    }
+
+    function updateKPI(kpis) {
+        document.getElementById('totalSamples').textContent = kpis.muestrasTotales.toLocaleString();
+        document.getElementById('impuritiesAvg').textContent = kpis.impurezasPromedio.toFixed(2) + '%';
+        document.getElementById('cutHeightAvg').textContent = kpis.alturaPromedio.toFixed(1) + 'cm';
+        document.getElementById('bandsUsageAvg').textContent = kpis.bandasPromedio.toFixed(1);
+        
+        // Actualizar tendencias
+        updateTrendColors('impuritiesTrend', kpis.impurezasPromedio, 2, 5);
+        updateTrendColors('heightTrend', kpis.alturaPromedio, 15, 20);
+    }
+
+    function updateTrendColors(elementId, value, warningThreshold, dangerThreshold) {
+        const element = document.getElementById(elementId);
+        if (value <= warningThreshold) {
+            element.style.background = '#d1fae5';
+            element.style.color = '#059669';
+        } else if (value <= dangerThreshold) {
+            element.style.background = '#fef3c7';
+            element.style.color = '#d97706';
+        } else {
+            element.style.background = '#fee2e2';
+            element.style.color = '#dc2626';
+        }
+    }
+
+    function updateFilterOptions() {
+        updateSelectOptions('filterIngenio', ['Todos', ...filterOptions.ingenios || []]);
+        updateSelectOptions('filterZona', ['Todos', ...filterOptions.zonas || []]);
+        updateSelectOptions('filterGrupo', ['Todos', ...filterOptions.grupos || []]);
+        updateSelectOptions('filterSupervisor', ['Todos', ...filterOptions.supervisores || []]);
+        
+        // Configurar eventos de filtro
+        document.getElementById('applyFilters').addEventListener('click', applyFilters);
+        document.getElementById('resetFilters').addEventListener('click', resetFilters);
+        document.getElementById('generateReport').addEventListener('click', generatePDFReport);
+    }
+
+    function updateSelectOptions(selectId, options) {
+        const select = document.getElementById(selectId);
+        select.innerHTML = '';
+        options.forEach(option => {
+            const opt = document.createElement('option');
+            opt.value = option;
+            opt.textContent = option;
+            select.appendChild(opt);
+        });
+    }
+
+    async function applyFilters() {
+        const filters = {
+            ingenio: document.getElementById('filterIngenio').value,
+            zona: document.getElementById('filterZona').value,
+            grupo: document.getElementById('filterGrupo').value,
+            supervisor: document.getElementById('filterSupervisor').value
+        };
+
+        try {
+            const response = await fetch(GAS_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    action: 'filterData',
+                    ...filters
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                filteredData = data.data;
+                updateCharts();
+                updateDataTable();
+                
+                // Recalcular KPIs para datos filtrados
                 const kpis = calculateFilteredKPIs();
                 updateKPI(kpis);
             }
+        } catch (error) {
+            console.error('Error aplicando filtros:', error);
+        }
+    }
+
+    function calculateFilteredKPIs() {
+        if (filteredData.length === 0) {
+            return {
+                muestrasTotales: 0,
+                impurezasPromedio: 0,
+                alturaPromedio: 0,
+                bandasPromedio: 0,
+                pegadaPromedio: 0,
+                puntaBasuraPromedio: 0
+            };
         }
 
-        // Inicializar gráficos
-        function initializeCharts() {
-            // Gráfico de líneas
-            const lineCtx = document.getElementById('lineChart').getContext('2d');
-            charts.line = new Chart(lineCtx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Indicador',
-                        data: [],
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: true },
-                        tooltip: { mode: 'index', intersect: false }
-                    },
-                    scales: {
-                        x: { grid: { display: true } },
-                        y: { 
-                            grid: { display: true },
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
+        let impurezasSum = 0;
+        let alturaSum = 0;
+        let bandasSum = 0;
+        let pegadaSum = 0;
+        let puntaBasuraSum = 0;
 
-            // Gráfico de barras
-            const barCtx = document.getElementById('barChart').getContext('2d');
-            charts.bar = new Chart(barCtx, {
-                type: 'bar',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'Valor',
-                        data: [],
-                        backgroundColor: [],
-                        borderColor: [],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    indexAxis: 'y',
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        x: { beginAtZero: true }
-                    }
-                }
-            });
+        filteredData.forEach(row => {
+            // Sumar impurezas (ejemplo simplificado)
+            impurezasSum += (parseFloat(row['% Picada']) || 0) + 
+                           (parseFloat(row['% Mamones']) || 0);
+            alturaSum += parseFloat(row['Altura del corte (cm)']) || 0;
+            bandasSum += parseInt(row['Uso de bandas']) || 0;
+            pegadaSum += parseInt(row['Pegada de corte (n°)']) || 0;
+            puntaBasuraSum += parseFloat(row['Punta en basura (Kg)']) || 0;
+        });
 
-            // Gráfico de comparación
-            const compCtx = document.getElementById('comparisonChart').getContext('2d');
-            charts.comparison = new Chart(compCtx, {
-                type: 'bar',
-                data: {
-                    labels: [],
-                    datasets: []
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'top' }
-                    },
-                    scales: {
-                        x: { grid: { display: true } },
-                        y: { beginAtZero: true }
-                    }
-                }
-            });
+        return {
+            muestrasTotales: filteredData.length,
+            impurezasPromedio: impurezasSum / filteredData.length / 2,
+            alturaPromedio: alturaSum / filteredData.length,
+            bandasPromedio: bandasSum / filteredData.length,
+            pegadaPromedio: pegadaSum / filteredData.length,
+            puntaBasuraPromedio: puntaBasuraSum / filteredData.length
+        };
+    }
 
-            // Configurar controles de gráficos
-            setupChartControls();
+    function resetFilters() {
+        document.getElementById('filterIngenio').value = 'Todos';
+        document.getElementById('filterZona').value = 'Todos';
+        document.getElementById('filterGrupo').value = 'Todos';
+        document.getElementById('filterSupervisor').value = 'Todos';
+        document.getElementById('filterIndicator').value = 'impurezas';
+        document.getElementById('filterTime').value = 'dia';
+        
+        filteredData = [...allData];
+        updateCharts();
+        updateDataTable();
+        
+        // Restaurar KPIs originales
+        if (allData.length > 0) {
+            const kpis = calculateFilteredKPIs();
+            updateKPI(kpis);
         }
+    }
+
+    // ==================== GRÁFICOS ====================
+    function initializeCharts() {
+        // Gráfico de líneas
+        const lineCtx = document.getElementById('lineChart').getContext('2d');
+        charts.line = new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Indicador',
+                    data: [],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true },
+                    tooltip: { mode: 'index', intersect: false }
+                },
+                scales: {
+                    x: { grid: { display: true } },
+                    y: { 
+                        grid: { display: true },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Gráfico de barras
+        const barCtx = document.getElementById('barChart').getContext('2d');
+        charts.bar = new Chart(barCtx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Valor',
+                    data: [],
+                    backgroundColor: [],
+                    borderColor: [],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: { beginAtZero: true }
+                }
+            }
+        });
+
+        // Gráfico de comparación
+        const compCtx = document.getElementById('comparisonChart').getContext('2d');
+        charts.comparison = new Chart(compCtx, {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: []
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' }
+                },
+                scales: {
+                    x: { grid: { display: true } },
+                    y: { beginAtZero: true }
+                }
+            }
+        });
 
         // Configurar controles de gráficos
-        function setupChartControls() {
-            // Descargar gráficos
-            document.getElementById('downloadLinePNG').addEventListener('click', () => {
-                downloadChart(charts.line, 'line-chart.png');
-            });
-            
-            document.getElementById('downloadLineSVG').addEventListener('click', () => {
-                downloadChart(charts.line, 'line-chart.svg', 'svg');
-            });
-            
-            document.getElementById('downloadBarPNG').addEventListener('click', () => {
-                downloadChart(charts.bar, 'bar-chart.png');
-            });
+        setupChartControls();
+    }
 
-            // Alternar etiquetas
-            document.getElementById('toggleLabels').addEventListener('click', function() {
-                const show = charts.line.options.plugins.datalabels = 
-                    !charts.line.options.plugins.datalabels;
-                charts.line.update();
-                this.innerHTML = show ? 
-                    '<i class="fas fa-tag"></i> Ocultar Etiquetas' : 
-                    '<i class="fas fa-tag"></i> Mostrar Etiquetas';
-            });
+    function setupChartControls() {
+        // Descargar gráficos
+        document.getElementById('downloadLinePNG').addEventListener('click', () => {
+            downloadChart(charts.line, 'line-chart.png');
+        });
+        
+        document.getElementById('downloadLineSVG').addEventListener('click', () => {
+            downloadChart(charts.line, 'line-chart.svg', 'svg');
+        });
+        
+        document.getElementById('downloadBarPNG').addEventListener('click', () => {
+            downloadChart(charts.bar, 'bar-chart.png');
+        });
 
-            // Actualizar gráfico de comparación
-            document.querySelectorAll('.comparisonIndicator').forEach(checkbox => {
-                checkbox.addEventListener('change', updateComparisonChart);
-            });
-            
-            document.getElementById('toggleComparison').addEventListener('click', function() {
-                const isBar = charts.comparison.config.type === 'bar';
-                charts.comparison.config.type = isBar ? 'line' : 'bar';
-                charts.comparison.update();
-                this.innerHTML = isBar ? 
-                    '<i class="fas fa-chart-line"></i> Ver Líneas' : 
-                    '<i class="fas fa-chart-bar"></i> Ver Barras';
-            });
-
-            // Análisis por grupo
-            document.getElementById('analysisGroupBy').addEventListener('change', updateIndicatorAnalysis);
-        }
-
-        // Descargar gráfico
-        function downloadChart(chart, filename, format = 'png') {
-            const link = document.createElement('a');
-            link.download = filename;
-            link.href = chart.toBase64Image(format === 'svg' ? 'image/svg+xml' : 'image/png');
-            link.click();
-        }
-
-        // Actualizar todos los gráficos
-        function updateCharts() {
-            updateLineChart();
-            updateBarChart();
-            updateComparisonChart();
-            updateIndicatorAnalysis();
-        }
-
-        // Actualizar gráfico de líneas
-        function updateLineChart() {
-            if (filteredData.length === 0) return;
-
-            const indicator = document.getElementById('filterIndicator').value;
-            const timePeriod = document.getElementById('filterTime').value;
-            
-            // Agrupar datos por período de tiempo
-            const groupedData = groupDataByTime(filteredData, timePeriod);
-            
-            // Preparar datos para el gráfico
-            const labels = Object.keys(groupedData);
-            const values = Object.values(groupedData).map(group => {
-                return calculateGroupAverage(group, indicator);
-            });
-
-            // Actualizar gráfico
-            charts.line.data.labels = labels;
-            charts.line.data.datasets[0].data = values;
-            charts.line.data.datasets[0].label = getIndicatorLabel(indicator);
+        // Alternar etiquetas
+        document.getElementById('toggleLabels').addEventListener('click', function() {
+            const show = charts.line.options.plugins.datalabels = 
+                !charts.line.options.plugins.datalabels;
             charts.line.update();
-            
-            // Actualizar título
-            document.getElementById('lineChartTitle').textContent = 
-                `Tendencia de ${getIndicatorLabel(indicator)} por ${timePeriod === 'dia' ? 'Día' : timePeriod === 'semana' ? 'Semana' : 'Mes'}`;
-        }
-
-        // Agrupar datos por tiempo
-        function groupDataByTime(data, period) {
-            const groups = {};
-            
-            data.forEach(row => {
-                const date = new Date(row.Fecha);
-                let key;
-                
-                switch(period) {
-                    case 'semana':
-                        const week = getWeekNumber(date);
-                        key = `Sem ${week}`;
-                        break;
-                    case 'mes':
-                        key = date.toLocaleDateString('es-ES', { month: 'short' });
-                        break;
-                    default: // día
-                        key = date.toLocaleDateString('es-ES');
-                }
-                
-                if (!groups[key]) groups[key] = [];
-                groups[key].push(row);
-            });
-            
-            return groups;
-        }
-
-        // Obtener número de semana
-        function getWeekNumber(date) {
-            const firstDay = new Date(date.getFullYear(), 0, 1);
-            const days = Math.floor((date - firstDay) / (24 * 60 * 60 * 1000));
-            return Math.ceil((days + firstDay.getDay() + 1) / 7);
-        }
-
-        // Calcular promedio del grupo
-        function calculateGroupAverage(group, indicator) {
-            if (group.length === 0) return 0;
-            
-            let sum = 0;
-            group.forEach(row => {
-                switch(indicator) {
-                    case 'impurezas':
-                        sum += (parseFloat(row['% Picada']) || 0) + 
-                               (parseFloat(row['% Mamones']) || 0);
-                        break;
-                    case 'altura':
-                        sum += parseFloat(row['Altura del corte (cm)']) || 0;
-                        break;
-                    case 'pegada':
-                        sum += parseInt(row['Pegada de corte (n°)']) || 0;
-                        break;
-                    case 'bandas':
-                        sum += parseInt(row['Uso de bandas']) || 0;
-                        break;
-                }
-            });
-            
-            return indicator === 'impurezas' ? sum / group.length / 2 : sum / group.length;
-        }
-
-        // Obtener etiqueta del indicador
-        function getIndicatorLabel(indicator) {
-            const labels = {
-                impurezas: 'Impurezas Totales (%)',
-                altura: 'Altura de Corte (cm)',
-                pegada: 'Pegada de Corte (n°)',
-                bandas: 'Uso de Bandas'
-            };
-            return labels[indicator] || indicator;
-        }
-
-        // Actualizar gráfico de barras
-        function updateBarChart() {
-            if (filteredData.length === 0) return;
-
-            // Agrupar por zona
-            const zonas = {};
-            filteredData.forEach(row => {
-                const zona = row.Zona || 'Sin Zona';
-                if (!zonas[zona]) zonas[zona] = [];
-                zonas[zona].push(row);
-            });
-
-            // Preparar datos
-            const labels = Object.keys(zonas);
-            const values = Object.values(zonas).map(group => group.length);
-            
-            // Colores semáforo basados en el promedio de impurezas
-            const colors = Object.values(zonas).map(group => {
-                const avgImpurity = calculateGroupAverage(group, 'impurezas');
-                return getTrafficLightColor(avgImpurity, 2, 5);
-            });
-
-            // Actualizar gráfico
-            charts.bar.data.labels = labels;
-            charts.bar.data.datasets[0].data = values;
-            charts.bar.data.datasets[0].backgroundColor = colors;
-            charts.bar.data.datasets[0].borderColor = colors.map(c => c.replace('0.8', '1'));
-            charts.bar.update();
-        }
-
-        // Obtener color semáforo
-        function getTrafficLightColor(value, warning, danger) {
-            if (value <= warning) {
-                return 'rgba(16, 185, 129, 0.8)'; // Verde
-            } else if (value <= danger) {
-                return 'rgba(245, 158, 11, 0.8)'; // Amarillo
-            } else {
-                return 'rgba(239, 68, 68, 0.8)'; // Rojo
-            }
-        }
+            this.innerHTML = show ? 
+                '<i class="fas fa-tag"></i> Ocultar Etiquetas' : 
+                '<i class="fas fa-tag"></i> Mostrar Etiquetas';
+        });
 
         // Actualizar gráfico de comparación
-        function updateComparisonChart() {
-            if (filteredData.length === 0) return;
-
-            const selectedIndicators = Array.from(
-                document.querySelectorAll('.comparisonIndicator:checked')
-            ).map(cb => cb.value);
-
-            if (selectedIndicators.length === 0) return;
-
-            // Agrupar por zona
-            const zonas = {};
-            filteredData.forEach(row => {
-                const zona = row.Zona || 'Sin Zona';
-                if (!zonas[zona]) zonas[zona] = [];
-                zonas[zona].push(row);
-            });
-
-            const labels = Object.keys(zonas);
-            const datasets = selectedIndicators.map((indicator, index) => {
-                const values = Object.values(zonas).map(group => 
-                    calculateGroupAverage(group, indicator)
-                );
-                
-                return {
-                    label: getIndicatorLabel(indicator),
-                    data: values,
-                    backgroundColor: getIndicatorColor(indicator, index),
-                    borderColor: getIndicatorColor(indicator, index).replace('0.6', '1'),
-                    borderWidth: 1
-                };
-            });
-
-            charts.comparison.data.labels = labels;
-            charts.comparison.data.datasets = datasets;
+        document.querySelectorAll('.comparisonIndicator').forEach(checkbox => {
+            checkbox.addEventListener('change', updateComparisonChart);
+        });
+        
+        document.getElementById('toggleComparison').addEventListener('click', function() {
+            const isBar = charts.comparison.config.type === 'bar';
+            charts.comparison.config.type = isBar ? 'line' : 'bar';
             charts.comparison.update();
-        }
+            this.innerHTML = isBar ? 
+                '<i class="fas fa-chart-line"></i> Ver Líneas' : 
+                '<i class="fas fa-chart-bar"></i> Ver Barras';
+        });
 
-        // Obtener color para indicador
-        function getIndicatorColor(indicator, index) {
-            const colors = [
-                'rgba(16, 185, 129, 0.6)',  // Verde
-                'rgba(59, 130, 246, 0.6)',  // Azul
-                'rgba(245, 158, 11, 0.6)',  // Amarillo
-                'rgba(139, 92, 246, 0.6)',  // Púrpura
-                'rgba(239, 68, 68, 0.6)'    // Rojo
-            ];
-            return colors[index % colors.length];
-        }
+        // Análisis por grupo
+        document.getElementById('analysisGroupBy').addEventListener('change', updateIndicatorAnalysis);
+    }
 
-        // Actualizar análisis por indicadores
-        function updateIndicatorAnalysis() {
-            if (filteredData.length === 0) return;
+    function downloadChart(chart, filename, format = 'png') {
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = chart.toBase64Image(format === 'svg' ? 'image/svg+xml' : 'image/png');
+        link.click();
+    }
 
-            const groupBy = document.getElementById('analysisGroupBy').value;
+    function updateCharts() {
+        updateLineChart();
+        updateBarChart();
+        updateComparisonChart();
+        updateIndicatorAnalysis();
+    }
+
+    function updateLineChart() {
+        if (filteredData.length === 0) return;
+
+        const indicator = document.getElementById('filterIndicator').value;
+        const timePeriod = document.getElementById('filterTime').value;
+        
+        // Agrupar datos por período de tiempo
+        const groupedData = groupDataByTime(filteredData, timePeriod);
+        
+        // Preparar datos para el gráfico
+        const labels = Object.keys(groupedData);
+        const values = Object.values(groupedData).map(group => {
+            return calculateGroupAverage(group, indicator);
+        });
+
+        // Actualizar gráfico
+        charts.line.data.labels = labels;
+        charts.line.data.datasets[0].data = values;
+        charts.line.data.datasets[0].label = getIndicatorLabel(indicator);
+        charts.line.update();
+        
+        // Actualizar título
+        document.getElementById('lineChartTitle').textContent = 
+            `Tendencia de ${getIndicatorLabel(indicator)} por ${timePeriod === 'dia' ? 'Día' : timePeriod === 'semana' ? 'Semana' : 'Mes'}`;
+    }
+
+    function groupDataByTime(data, period) {
+        const groups = {};
+        
+        data.forEach(row => {
+            const date = new Date(row.Fecha);
+            let key;
             
-            // Agrupar datos
-            const groups = {};
-            filteredData.forEach(row => {
-                const key = row[getGroupByField(groupBy)] || `Sin ${groupBy}`;
-                if (!groups[key]) groups[key] = [];
-                groups[key].push(row);
-            });
+            switch(period) {
+                case 'semana':
+                    const week = getWeekNumber(date);
+                    key = `Sem ${week}`;
+                    break;
+                case 'mes':
+                    key = date.toLocaleDateString('es-ES', { month: 'short' });
+                    break;
+                default: // día
+                    key = date.toLocaleDateString('es-ES');
+            }
+            
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(row);
+        });
+        
+        return groups;
+    }
 
-            // Calcular métricas para cada grupo
-            const analysisHTML = Object.entries(groups).map(([groupName, groupData]) => {
-                const metrics = calculateGroupMetrics(groupData);
-                return createIndicatorCard(groupName, metrics, groupData.length);
-            }).join('');
+    function getWeekNumber(date) {
+        const firstDay = new Date(date.getFullYear(), 0, 1);
+        const days = Math.floor((date - firstDay) / (24 * 60 * 60 * 1000));
+        return Math.ceil((days + firstDay.getDay() + 1) / 7);
+    }
 
-            document.getElementById('indicatorAnalysis').innerHTML = analysisHTML;
+    function calculateGroupAverage(group, indicator) {
+        if (group.length === 0) return 0;
+        
+        let sum = 0;
+        group.forEach(row => {
+            switch(indicator) {
+                case 'impurezas':
+                    sum += (parseFloat(row['% Picada']) || 0) + 
+                           (parseFloat(row['% Mamones']) || 0);
+                    break;
+                case 'altura':
+                    sum += parseFloat(row['Altura del corte (cm)']) || 0;
+                    break;
+                case 'pegada':
+                    sum += parseInt(row['Pegada de corte (n°)']) || 0;
+                    break;
+                case 'bandas':
+                    sum += parseInt(row['Uso de bandas']) || 0;
+                    break;
+            }
+        });
+        
+        return indicator === 'impurezas' ? sum / group.length / 2 : sum / group.length;
+    }
+
+    function getIndicatorLabel(indicator) {
+        const labels = {
+            impurezas: 'Impurezas Totales (%)',
+            altura: 'Altura de Corte (cm)',
+            pegada: 'Pegada de Corte (n°)',
+            bandas: 'Uso de Bandas'
+        };
+        return labels[indicator] || indicator;
+    }
+
+    function updateBarChart() {
+        if (filteredData.length === 0) return;
+
+        // Agrupar por zona
+        const zonas = {};
+        filteredData.forEach(row => {
+            const zona = row.Zona || 'Sin Zona';
+            if (!zonas[zona]) zonas[zona] = [];
+            zonas[zona].push(row);
+        });
+
+        // Preparar datos
+        const labels = Object.keys(zonas);
+        const values = Object.values(zonas).map(group => group.length);
+        
+        // Colores semáforo basados en el promedio de impurezas
+        const colors = Object.values(zonas).map(group => {
+            const avgImpurity = calculateGroupAverage(group, 'impurezas');
+            return getTrafficLightColor(avgImpurity, 2, 5);
+        });
+
+        // Actualizar gráfico
+        charts.bar.data.labels = labels;
+        charts.bar.data.datasets[0].data = values;
+        charts.bar.data.datasets[0].backgroundColor = colors;
+        charts.bar.data.datasets[0].borderColor = colors.map(c => c.replace('0.8', '1'));
+        charts.bar.update();
+    }
+
+    function getTrafficLightColor(value, warning, danger) {
+        if (value <= warning) {
+            return 'rgba(16, 185, 129, 0.8)'; // Verde
+        } else if (value <= danger) {
+            return 'rgba(245, 158, 11, 0.8)'; // Amarillo
+        } else {
+            return 'rgba(239, 68, 68, 0.8)'; // Rojo
         }
+    }
 
-        // Obtener campo para agrupar
-        function getGroupByField(groupBy) {
-            const fields = {
-                zona: 'Zona',
-                grupo: 'Grupo de cosecha',
-                supervisor: 'Supervisor de cosecha',
-                ingenio: 'Ingenio'
-            };
-            return fields[groupBy] || groupBy;
-        }
+    function updateComparisonChart() {
+        if (filteredData.length === 0) return;
 
-        // Calcular métricas del grupo
-        function calculateGroupMetrics(groupData) {
-            if (groupData.length === 0) return {};
+        const selectedIndicators = Array.from(
+            document.querySelectorAll('.comparisonIndicator:checked')
+        ).map(cb => cb.value);
 
-            let impurezas = 0;
-            let altura = 0;
-            let pegada = 0;
-            let bandas = 0;
+        if (selectedIndicators.length === 0) return;
 
-            groupData.forEach(row => {
-                impurezas += (parseFloat(row['% Picada']) || 0) + 
-                            (parseFloat(row['% Mamones']) || 0);
-                altura += parseFloat(row['Altura del corte (cm)']) || 0;
-                pegada += parseInt(row['Pegada de corte (n°)']) || 0;
-                bandas += parseInt(row['Uso de bandas']) || 0;
-            });
+        // Agrupar por zona
+        const zonas = {};
+        filteredData.forEach(row => {
+            const zona = row.Zona || 'Sin Zona';
+            if (!zonas[zona]) zonas[zona] = [];
+            zonas[zona].push(row);
+        });
 
-            const count = groupData.length;
+        const labels = Object.keys(zonas);
+        const datasets = selectedIndicators.map((indicator, index) => {
+            const values = Object.values(zonas).map(group => 
+                calculateGroupAverage(group, indicator)
+            );
+            
             return {
-                impurezas: impurezas / count / 2,
-                altura: altura / count,
-                pegada: pegada / count,
-                bandas: bandas / count
+                label: getIndicatorLabel(indicator),
+                data: values,
+                backgroundColor: getIndicatorColor(indicator, index),
+                borderColor: getIndicatorColor(indicator, index).replace('0.6', '1'),
+                borderWidth: 1
             };
-        }
+        });
 
-        // Crear tarjeta de indicador
-        function createIndicatorCard(groupName, metrics, sampleCount) {
-            const impurezasColor = getTrafficLightColor(metrics.impurezas, 2, 5);
-            const alturaColor = getTrafficLightColor(20 - metrics.altura, 5, 10); // Invertido: más alto es mejor
+        charts.comparison.data.labels = labels;
+        charts.comparison.data.datasets = datasets;
+        charts.comparison.update();
+    }
 
-            return `
-                <div class="indicator-card">
-                    <div class="indicator-header">
-                        <div class="indicator-name">${groupName}</div>
-                        <div style="font-size: 0.875rem; color: var(--gray-600);">
-                            ${sampleCount} muestras
-                        </div>
-                    </div>
-                    <div class="indicator-value">${metrics.impurezas.toFixed(2)}%</div>
-                    <div class="indicator-bar">
-                        <div class="indicator-fill" style="width: ${Math.min(metrics.impurezas * 10, 100)}%; background: ${impurezasColor};"></div>
-                    </div>
-                    <div style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 0.5rem;">
-                        Impurezas Totales
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
-                        <div>
-                            <div style="font-size: 0.75rem; color: var(--gray-600);">Altura</div>
-                            <div style="font-weight: 600;">${metrics.altura.toFixed(1)}cm</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 0.75rem; color: var(--gray-600);">Bandas</div>
-                            <div style="font-weight: 600;">${metrics.bandas.toFixed(1)}</div>
-                        </div>
+    function getIndicatorColor(indicator, index) {
+        const colors = [
+            'rgba(16, 185, 129, 0.6)',  // Verde
+            'rgba(59, 130, 246, 0.6)',  // Azul
+            'rgba(245, 158, 11, 0.6)',  // Amarillo
+            'rgba(139, 92, 246, 0.6)',  // Púrpura
+            'rgba(239, 68, 68, 0.6)'    // Rojo
+        ];
+        return colors[index % colors.length];
+    }
+
+    function updateIndicatorAnalysis() {
+        if (filteredData.length === 0) return;
+
+        const groupBy = document.getElementById('analysisGroupBy').value;
+        
+        // Agrupar datos
+        const groups = {};
+        filteredData.forEach(row => {
+            const key = row[getGroupByField(groupBy)] || `Sin ${groupBy}`;
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(row);
+        });
+
+        // Calcular métricas para cada grupo
+        const analysisHTML = Object.entries(groups).map(([groupName, groupData]) => {
+            const metrics = calculateGroupMetrics(groupData);
+            return createIndicatorCard(groupName, metrics, groupData.length);
+        }).join('');
+
+        document.getElementById('indicatorAnalysis').innerHTML = analysisHTML;
+    }
+
+    function getGroupByField(groupBy) {
+        const fields = {
+            zona: 'Zona',
+            grupo: 'Grupo de cosecha',
+            supervisor: 'Supervisor de cosecha',
+            ingenio: 'Ingenio'
+        };
+        return fields[groupBy] || groupBy;
+    }
+
+    function calculateGroupMetrics(groupData) {
+        if (groupData.length === 0) return {};
+
+        let impurezas = 0;
+        let altura = 0;
+        let pegada = 0;
+        let bandas = 0;
+
+        groupData.forEach(row => {
+            impurezas += (parseFloat(row['% Picada']) || 0) + 
+                        (parseFloat(row['% Mamones']) || 0);
+            altura += parseFloat(row['Altura del corte (cm)']) || 0;
+            pegada += parseInt(row['Pegada de corte (n°)']) || 0;
+            bandas += parseInt(row['Uso de bandas']) || 0;
+        });
+
+        const count = groupData.length;
+        return {
+            impurezas: impurezas / count / 2,
+            altura: altura / count,
+            pegada: pegada / count,
+            bandas: bandas / count
+        };
+    }
+
+    function createIndicatorCard(groupName, metrics, sampleCount) {
+        const impurezasColor = getTrafficLightColor(metrics.impurezas, 2, 5);
+        const alturaColor = getTrafficLightColor(20 - metrics.altura, 5, 10); // Invertido: más alto es mejor
+
+        return `
+            <div class="indicator-card">
+                <div class="indicator-header">
+                    <div class="indicator-name">${groupName}</div>
+                    <div style="font-size: 0.875rem; color: var(--gray-600);">
+                        ${sampleCount} muestras
                     </div>
                 </div>
-            `;
-        }
+                <div class="indicator-value">${metrics.impurezas.toFixed(2)}%</div>
+                <div class="indicator-bar">
+                    <div class="indicator-fill" style="width: ${Math.min(metrics.impurezas * 10, 100)}%; background: ${impurezasColor};"></div>
+                </div>
+                <div style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 0.5rem;">
+                    Impurezas Totales
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--gray-600);">Altura</div>
+                        <div style="font-weight: 600;">${metrics.altura.toFixed(1)}cm</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--gray-600);">Bandas</div>
+                        <div style="font-weight: 600;">${metrics.bandas.toFixed(1)}</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
 
-        // Actualizar tabla de datos
-        function updateDataTable() {
-            const tableBody = document.getElementById('tableBody');
-            const tableLoading = document.getElementById('tableLoading');
-            const tableContainer = document.getElementById('dataTableContainer');
-            const shownCount = document.getElementById('shownCount');
-            const totalCount = document.getElementById('totalCount');
+    // ==================== TABLA DE DATOS ====================
+    function updateDataTable() {
+        const tableBody = document.getElementById('tableBody');
+        const tableLoading = document.getElementById('tableLoading');
+        const tableContainer = document.getElementById('dataTableContainer');
+        const shownCount = document.getElementById('shownCount');
+        const totalCount = document.getElementById('totalCount');
 
-            // Mostrar loading
-            tableLoading.style.display = 'flex';
-            tableContainer.style.display = 'none';
+        // Mostrar loading
+        tableLoading.style.display = 'flex';
+        tableContainer.style.display = 'none';
 
-            // Limitar a 100 registros para rendimiento
-            const displayData = filteredData.slice(0, 100);
+        // Limitar a 100 registros para rendimiento
+        const displayData = filteredData.slice(0, 100);
 
-            setTimeout(() => {
-                // Generar filas de tabla
-                const rows = displayData.map(row => `
-                    <tr>
-                        <td>${row.Ingenio || ''}</td>
-                        <td>${row['No. Muestra'] || ''}</td>
-                        <td>${row.Fecha || ''}</td>
-                        <td>${row.Zona || ''}</td>
-                        <td>${row['Grupo de cosecha'] || ''}</td>
-                        <td>${row['Supervisor de cosecha'] || ''}</td>
-                        <td>${((parseFloat(row['% Picada']) || 0) + (parseFloat(row['% Mamones']) || 0)).toFixed(2)}%</td>
-                        <td>${row['Altura del corte (cm)'] || ''}</td>
-                        <td>
-                            <span style="
-                                display: inline-block;
-                                padding: 0.25rem 0.5rem;
-                                border-radius: 4px;
-                                font-size: 0.75rem;
-                                font-weight: 500;
-                                background: ${row['Conformidad de calidad de cosecha'] === 'conforme' ? 
-                                    '#d1fae5' : '#fee2e2'};
-                                color: ${row['Conformidad de calidad de cosecha'] === 'conforme' ? 
-                                    '#059669' : '#dc2626'};
-                            ">
-                                ${row['Conformidad de calidad de cosecha'] || 'No conforme'}
-                            </span>
-                        </td>
-                    </tr>
-                `).join('');
+        setTimeout(() => {
+            // Generar filas de tabla
+            const rows = displayData.map(row => `
+                <tr>
+                    <td>${row.Ingenio || ''}</td>
+                    <td>${row['No. Muestra'] || ''}</td>
+                    <td>${row.Fecha || ''}</td>
+                    <td>${row.Zona || ''}</td>
+                    <td>${row['Grupo de cosecha'] || ''}</td>
+                    <td>${row['Supervisor de cosecha'] || ''}</td>
+                    <td>${((parseFloat(row['% Picada']) || 0) + (parseFloat(row['% Mamones']) || 0)).toFixed(2)}%</td>
+                    <td>${row['Altura del corte (cm)'] || ''}</td>
+                    <td>
+                        <span style="
+                            display: inline-block;
+                            padding: 0.25rem 0.5rem;
+                            border-radius: 4px;
+                            font-size: 0.75rem;
+                            font-weight: 500;
+                            background: ${row['Conformidad de calidad de cosecha'] === 'conforme' ? 
+                                '#d1fae5' : '#fee2e2'};
+                            color: ${row['Conformidad de calidad de cosecha'] === 'conforme' ? 
+                                '#059669' : '#dc2626'};
+                        ">
+                            ${row['Conformidad de calidad de cosecha'] || 'No conforme'}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
 
-                tableBody.innerHTML = rows;
-                shownCount.textContent = displayData.length;
-                totalCount.textContent = filteredData.length;
+            tableBody.innerHTML = rows;
+            shownCount.textContent = displayData.length;
+            totalCount.textContent = filteredData.length;
 
-                // Ocultar loading, mostrar tabla
-                tableLoading.style.display = 'none';
-                tableContainer.style.display = 'block';
-            }, 500);
+            // Ocultar loading, mostrar tabla
+            tableLoading.style.display = 'none';
+            tableContainer.style.display = 'block';
+        }, 500);
 
-            // Configurar botón de descarga
-            document.getElementById('downloadData').addEventListener('click', downloadDataCSV);
-        }
+        // Configurar botón de descarga
+        document.getElementById('downloadData').addEventListener('click', downloadDataCSV);
+    }
 
-        // Descargar datos como CSV
-        function downloadDataCSV() {
-            if (filteredData.length === 0) return;
+    function downloadDataCSV() {
+        if (filteredData.length === 0) return;
 
-            // Crear cabeceras CSV
-            const headers = Object.keys(filteredData[0]);
-            const csvRows = [
-                headers.join(','),
-                ...filteredData.map(row => 
-                    headers.map(header => {
-                        const value = row[header] || '';
-                        return `"${value.toString().replace(/"/g, '""')}"`;
-                    }).join(',')
-                )
+        // Crear cabeceras CSV
+        const headers = Object.keys(filteredData[0]);
+        const csvRows = [
+            headers.join(','),
+            ...filteredData.map(row => 
+                headers.map(header => {
+                    const value = row[header] || '';
+                    return `"${value.toString().replace(/"/g, '""')}"`;
+                }).join(',')
+            )
+        ];
+
+        const csvContent = csvRows.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `datos-cana-${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+    }
+
+    // ==================== GENERAR INFORME PDF ====================
+    async function generatePDFReport() {
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            // Título
+            doc.setFontSize(20);
+            doc.setTextColor(16, 185, 129);
+            doc.text('Informe de Monitoreo de Caña', 105, 20, { align: 'center' });
+            
+            // Metadatos
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 20, 30);
+            doc.text(`Usuario: ${currentUser?.email || 'No autenticado'}`, 20, 35);
+            doc.text(`Muestras: ${filteredData.length}`, 20, 40);
+            
+            // KPIs
+            doc.setFontSize(14);
+            doc.setTextColor(0, 0, 0);
+            doc.text('Resumen de Indicadores', 20, 55);
+            
+            const kpis = calculateFilteredKPIs();
+            const kpiText = [
+                `Muestras Totales: ${kpis.muestrasTotales}`,
+                `Impurezas Promedio: ${kpis.impurezasPromedio.toFixed(2)}%`,
+                `Altura de Corte Promedio: ${kpis.alturaPromedio.toFixed(1)}cm`,
+                `Uso de Bandas Promedio: ${kpis.bandasPromedio.toFixed(1)}`
             ];
-
-            const csvContent = csvRows.join('\n');
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `datos-cana-${new Date().toISOString().split('T')[0]}.csv`;
-            link.click();
-        }
-
-        // Generar informe PDF
-        async function generatePDFReport() {
-            try {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF('p', 'mm', 'a4');
-                
-                // Título
-                doc.setFontSize(20);
-                doc.setTextColor(16, 185, 129);
-                doc.text('Informe de Monitoreo de Caña', 105, 20, { align: 'center' });
-                
-                // Metadatos
-                doc.setFontSize(10);
-                doc.setTextColor(100, 100, 100);
-                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 20, 30);
-                doc.text(`Usuario: ${currentUser?.email || 'No autenticado'}`, 20, 35);
-                doc.text(`Muestras: ${filteredData.length}`, 20, 40);
-                
-                // KPIs
-                doc.setFontSize(14);
-                doc.setTextColor(0, 0, 0);
-                doc.text('Resumen de Indicadores', 20, 55);
-                
-                const kpis = calculateFilteredKPIs();
-                const kpiText = [
-                    `Muestras Totales: ${kpis.muestrasTotales}`,
-                    `Impurezas Promedio: ${kpis.impurezasPromedio.toFixed(2)}%`,
-                    `Altura de Corte Promedio: ${kpis.alturaPromedio.toFixed(1)}cm`,
-                    `Uso de Bandas Promedio: ${kpis.bandasPromedio.toFixed(1)}`
-                ];
-                
-                doc.setFontSize(11);
-                kpiText.forEach((text, i) => {
-                    doc.text(text, 20, 65 + (i * 7));
-                });
-                
-                // Filtros aplicados
-                doc.setFontSize(14);
-                doc.text('Filtros Aplicados', 20, 100);
-                doc.setFontSize(11);
-                
-                const filters = {
-                    'Ingenio': document.getElementById('filterIngenio').value,
-                    'Zona': document.getElementById('filterZona').value,
-                    'Grupo': document.getElementById('filterGrupo').value,
-                    'Supervisor': document.getElementById('filterSupervisor').value
-                };
-                
-                Object.entries(filters).forEach(([key, value], i) => {
-                    doc.text(`${key}: ${value}`, 20, 110 + (i * 7));
-                });
-                
-                // Capturar gráfico principal
-                const chartCanvas = document.getElementById('lineChart');
-                if (chartCanvas) {
-                    const chartImage = await html2canvas(chartCanvas);
-                    const imgData = chartImage.toDataURL('image/png');
-                    doc.addPage();
-                    doc.text('Gráfico de Tendencia', 20, 20);
-                    doc.addImage(imgData, 'PNG', 20, 30, 170, 80);
-                }
-                
-                // Guardar PDF
-                doc.save(`informe-cana-${new Date().toISOString().split('T')[0]}.pdf`);
-                
-            } catch (error) {
-                console.error('Error generando PDF:', error);
-                alert('Error al generar el informe PDF. Por favor, intente nuevamente.');
+            
+            doc.setFontSize(11);
+            kpiText.forEach((text, i) => {
+                doc.text(text, 20, 65 + (i * 7));
+            });
+            
+            // Filtros aplicados
+            doc.setFontSize(14);
+            doc.text('Filtros Aplicados', 20, 100);
+            doc.setFontSize(11);
+            
+            const filters = {
+                'Ingenio': document.getElementById('filterIngenio').value,
+                'Zona': document.getElementById('filterZona').value,
+                'Grupo': document.getElementById('filterGrupo').value,
+                'Supervisor': document.getElementById('filterSupervisor').value
+            };
+            
+            Object.entries(filters).forEach(([key, value], i) => {
+                doc.text(`${key}: ${value}`, 20, 110 + (i * 7));
+            });
+            
+            // Capturar gráfico principal
+            const chartCanvas = document.getElementById('lineChart');
+            if (chartCanvas) {
+                const chartImage = await html2canvas(chartCanvas);
+                const imgData = chartImage.toDataURL('image/png');
+                doc.addPage();
+                doc.text('Gráfico de Tendencia', 20, 20);
+                doc.addImage(imgData, 'PNG', 20, 30, 170, 80);
             }
+            
+            // Guardar PDF
+            doc.save(`informe-cana-${new Date().toISOString().split('T')[0]}.pdf`);
+            
+        } catch (error) {
+            console.error('Error generando PDF:', error);
+            alert('Error al generar el informe PDF. Por favor, intente nuevamente.');
         }
-
-        // Inicializar filtros
-        function initializeFilters() {
-            // Configurar valores por defecto
-            resetFilters();
-        }
-    </script>
+    }
+</script>
 </body>
 </html>
