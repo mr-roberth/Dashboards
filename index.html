@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
             --primary-color: #2e7d32;
@@ -219,7 +220,6 @@
             padding: 20px;
             box-shadow: var(--box-shadow);
             transition: transform 0.3s ease;
-            border-left: 5px solid var(--primary-color);
         }
         
         .kpi-card:hover {
@@ -235,7 +235,6 @@
         
         .kpi-icon {
             font-size: 1.8rem;
-            color: var(--primary-color);
         }
         
         .kpi-title {
@@ -247,7 +246,6 @@
         .kpi-value {
             font-size: 2rem;
             font-weight: 700;
-            color: var(--text-dark);
             margin-bottom: 5px;
         }
         
@@ -556,7 +554,8 @@
                 </div>
             </div>
         </div>
-<!-- Register Screen -->
+        
+        <!-- Register Screen -->
         <div id="registerScreen" class="auth-container" style="display: none;">
             <div class="auth-box">
                 <div class="auth-logo">
@@ -669,6 +668,9 @@
                                     <option value="dia">Por Día</option>
                                     <option value="mes">Por Mes</option>
                                 </select>
+                                <button class="btn btn-secondary btn-small" id="toggleLabelsMain">
+                                    <i class="fas fa-tag"></i> Etiquetas
+                                </button>
                                 <button class="btn btn-secondary btn-small" id="downloadChart">
                                     <i class="fas fa-download"></i> PNG
                                 </button>
@@ -688,6 +690,9 @@
                                     <option value="supervisor">Por Supervisor</option>
                                     <option value="zona">Por Zona</option>
                                 </select>
+                                <button class="btn btn-secondary btn-small" id="toggleLabelsBar">
+                                    <i class="fas fa-tag"></i> Etiquetas
+                                </button>
                                 <button class="btn btn-secondary btn-small" id="downloadBarChart">
                                     <i class="fas fa-download"></i> PNG
                                 </button>
@@ -704,6 +709,9 @@
                     <div class="chart-header">
                         <h3><i class="fas fa-chart-area"></i> Análisis Comparativo</h3>
                         <div class="chart-controls">
+                            <button class="btn btn-secondary btn-small" id="toggleLabelsComparative">
+                                <i class="fas fa-tag"></i> Etiquetas
+                            </button>
                             <button class="btn btn-secondary btn-small" id="downloadComparativeChart">
                                 <i class="fas fa-download"></i> PNG
                             </button>
@@ -730,10 +738,6 @@
                         <div class="indicator-checkbox">
                             <input type="checkbox" id="comparePunta" value="punta">
                             <label for="comparePunta">% Punta</label>
-                        </div>
-                        <div class="indicator-checkbox">
-                            <input type="checkbox" id="compareTierra" value="tierra">
-                            <label for="compareTierra">% Tierra</label>
                         </div>
                         <button class="btn btn-primary btn-small" id="updateComparative">
                             <i class="fas fa-sync"></i> Actualizar
@@ -912,23 +916,24 @@
                 bad: '#f44336',
                 primary: '#2e7d32',
                 primaryLight: '#4caf50',
-                primaryDark: '#1b5e20'
+                primaryDark: '#1b5e20',
+                neutral: '#607d8b'
             },
             thresholds: {
-                impurezasTotales: { good: 5, warning: 10 },
-                picada: { good: 0.5, warning: 2 },
-                mamones: { good: 1, warning: 3 },
-                lalas: { good: 0.1, warning: 0.5 },
-                tallosSecos: { good: 0.5, warning: 2 },
-                tallosDaniados: { good: 0.1, warning: 0.5 },
-                raices: { good: 0.1, warning: 0.3 },
-                punta: { good: 1, warning: 3 },
-                tierra: { good: 0.1, warning: 0.5 },
-                piedra: { good: 0, warning: 0.1 },
-                puntaBasura: { good: 1, warning: 3 },
-                alturaCorte: { good: 15, warning: 10 },
-                usoBandas: { good: 3, warning: 2 },
-                pegadaCorte: { good: 4, warning: 3 }
+                impurezasTotales: { red: 10, yellow: 5 },
+                picada: { red: 3, yellow: 1.5 },
+                mamones: { red: 3, yellow: 1.5 },
+                lalas: { red: 1, yellow: 0.5 },
+                tallosSecos: { red: 2, yellow: 1 },
+                tallosDaniados: { red: 1, yellow: 0.5 },
+                raices: { red: 0.5, yellow: 0.2 },
+                punta: { red: 5, yellow: 2.5 },
+                tierra: { red: 1, yellow: 0.5 },
+                piedra: { red: 0.2, yellow: 0.1 },
+                puntaBasura: { red: 5, yellow: 2.5 },
+                alturaCorte: { red: 10, yellow: 12 }, // Valores bajos son malos
+                usoBandas: { red: 2, yellow: 3 }, // Valores bajos son malos
+                pegadaCorte: { red: 3, yellow: 4 } // Valores bajos son malos
             },
             chartColors: [
                 '#2e7d32', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b',
@@ -955,7 +960,12 @@
             currentPage: 1,
             pageSize: 50,
             charts: {},
-            currentTab: 'dashboard-tab'
+            currentTab: 'dashboard-tab',
+            showLabels: {
+                mainChart: false,
+                barChart: false,
+                comparativeChart: false
+            }
         };
         
         // Mapeo de nombres de indicadores
@@ -1024,6 +1034,11 @@
             document.getElementById('downloadBarChart').addEventListener('click', () => downloadChart('barChart'));
             document.getElementById('downloadComparativeChart').addEventListener('click', () => downloadChart('comparativeChart'));
             
+            // Toggle labels
+            document.getElementById('toggleLabelsMain').addEventListener('click', () => toggleChartLabels('mainChart'));
+            document.getElementById('toggleLabelsBar').addEventListener('click', () => toggleChartLabels('barChart'));
+            document.getElementById('toggleLabelsComparative').addEventListener('click', () => toggleChartLabels('comparativeChart'));
+            
             // Data Tab
             document.getElementById('downloadData').addEventListener('click', downloadDataAsCSV);
             document.getElementById('exportExcel').addEventListener('click', exportToExcel);
@@ -1031,9 +1046,9 @@
             document.getElementById('nextPage').addEventListener('click', nextPage);
             
             // Reports Tab
-            document.getElementById('generateSummaryReport').addEventListener('click', generateSummaryReport);
-            document.getElementById('generateTrendReport').addEventListener('click', generateTrendReport);
-            document.getElementById('generateComparativeReport').addEventListener('click', generateComparativeReport);
+            document.getElementById('generateSummaryReport').addEventListener('click', () => generateReport('summary'));
+            document.getElementById('generateTrendReport').addEventListener('click', () => generateReport('trend'));
+            document.getElementById('generateComparativeReport').addEventListener('click', () => generateReport('comparative'));
             document.getElementById('exportFullData').addEventListener('click', exportFullData);
             document.getElementById('generateCustomReport').addEventListener('click', generateCustomReport);
             
@@ -1369,7 +1384,7 @@
             }
         }
         
-        // Renderizar KPIs
+        // Renderizar KPIs con las modificaciones solicitadas
         function renderKPIs() {
             const kpiGrid = document.getElementById('kpiGrid');
             
@@ -1378,35 +1393,148 @@
                 return;
             }
             
-            // Definir KPIs principales a mostrar
+            // KPIs principales con las modificaciones solicitadas
             const mainKPIs = [
-                { id: 'muestrasTotales', title: 'Muestras Totales', icon: 'fas fa-clipboard-list', format: 'number' },
-                { id: 'impurezasTotales', title: 'Impurezas Totales', icon: 'fas fa-trash', format: 'percent' },
-                { id: 'picada', title: '% Picada', icon: 'fas fa-cut', format: 'percent' },
-                { id: 'mamones', title: '% Mamones', icon: 'fas fa-tree', format: 'percent' },
-                { id: 'puntaBasura', title: 'Punta en Basura', icon: 'fas fa-leaf', format: 'kg' },
-                { id: 'alturaCorte', title: 'Altura de Corte', icon: 'fas fa-ruler-vertical', format: 'cm' },
-                { id: 'usoBandas', title: 'Uso de Bandas', icon: 'fas fa-band-aid', format: 'number' },
-                { id: 'pegadaCorte', title: 'Pegada de Corte', icon: 'fas fa-cut', format: 'number' }
+                { 
+                    id: 'muestrasTotales', 
+                    title: 'Muestras Totales', 
+                    icon: 'fas fa-clipboard-list', 
+                    format: 'number',
+                    color: CONFIG.colors.neutral, // Color neutro para informativo
+                    showStatus: false // No mostrar estado de semáforo
+                },
+                { 
+                    id: 'impurezasTotales', 
+                    title: 'Impurezas Totales', 
+                    icon: 'fas fa-trash', 
+                    format: 'percent',
+                    color: getColorForIndicator('impurezasTotales', AppState.kpis.impurezasTotales || 0),
+                    showStatus: true
+                },
+                { 
+                    id: 'picada', 
+                    title: '% Picada', 
+                    icon: 'fas fa-cut', 
+                    format: 'percent',
+                    color: getColorForIndicator('picada', AppState.kpis.picada || 0),
+                    showStatus: true
+                },
+                { 
+                    id: 'mamones', 
+                    title: '% Mamones', 
+                    icon: 'fas fa-tree', 
+                    format: 'percent',
+                    color: getColorForIndicator('mamones', AppState.kpis.mamones || 0),
+                    showStatus: true
+                },
+                { 
+                    id: 'puntaBasura', 
+                    title: 'Punta en Basura', 
+                    icon: 'fas fa-leaf', 
+                    format: 'kg',
+                    color: getColorForIndicator('puntaBasura', AppState.kpis.puntaBasura || 0),
+                    showStatus: false
+                },
+                { 
+                    id: 'alturaCorte', 
+                    title: 'Altura de Corte', 
+                    icon: 'fas fa-ruler-vertical', 
+                    format: 'cm',
+                    color: getColorForIndicator('alturaCorte', AppState.kpis.alturaCorte || 0),
+                    showStatus: false
+                },
+                { 
+                    id: 'usoBandas', 
+                    title: 'Uso de Bandas', 
+                    icon: 'fas fa-band-aid', 
+                    format: 'number',
+                    color: getColorForIndicator('usoBandas', AppState.kpis.usoBandas || 0),
+                    showStatus: false,
+                    noUnit: true // Sin unidad de medida
+                },
+                { 
+                    id: 'pegadaCorte', 
+                    title: 'Pegada de Corte', 
+                    icon: 'fas fa-cut', 
+                    format: 'number',
+                    color: getColorForIndicator('pegadaCorte', AppState.kpis.pegadaCorte || 0),
+                    showStatus: false
+                }
             ];
             
             kpiGrid.innerHTML = mainKPIs.map(kpi => {
                 if (!AppState.kpis.hasOwnProperty(kpi.id)) return '';
                 
                 const value = AppState.kpis[kpi.id];
-                const color = getColorForIndicator(kpi.id, value);
+                const borderColor = kpi.color;
+                const formattedValue = formatKPIValue(value, kpi.format, kpi.noUnit);
                 
                 return `
-                    <div class="kpi-card" style="border-left-color: ${color}">
+                    <div class="kpi-card" style="border-left: 5px solid ${borderColor}">
                         <div class="kpi-header">
                             <div class="kpi-title">${kpi.title}</div>
-                            <div class="kpi-icon"><i class="${kpi.icon}"></i></div>
+                            <div class="kpi-icon" style="color: ${borderColor}"><i class="${kpi.icon}"></i></div>
                         </div>
-                        <div class="kpi-value">${formatKPIValue(value, kpi.format)}</div>
-                        <div class="kpi-subtitle">${getIndicatorStatus(kpi.id, value)}</div>
+                        <div class="kpi-value">${formattedValue}</div>
+                        <div class="kpi-subtitle">
+                            ${kpi.showStatus ? getIndicatorStatus(kpi.id, value) : 'Indicador informativo'}
+                        </div>
                     </div>
                 `;
             }).join('');
+        }
+        
+        // Obtener color para indicador según los umbrales especificados
+        function getColorForIndicator(indicator, value) {
+            const threshold = CONFIG.thresholds[indicator];
+            if (!threshold) return CONFIG.colors.primary;
+            
+            // Para impurezas totales, picada y mamones: rojo si > 3%
+            if (['impurezasTotales', 'picada', 'mamones'].includes(indicator)) {
+                return value > 3 ? CONFIG.colors.bad : 
+                       value > 1.5 ? CONFIG.colors.warning : CONFIG.colors.good;
+            }
+            
+            // Para altura de corte, uso de bandas y pegada de corte, valores altos son buenos
+            if (['alturaCorte', 'usoBandas', 'pegadaCorte'].includes(indicator)) {
+                return value >= threshold.yellow ? CONFIG.colors.good : 
+                       value >= threshold.red ? CONFIG.colors.warning : CONFIG.colors.bad;
+            } else {
+                // Para el resto, valores bajos son buenos
+                return value <= threshold.yellow ? CONFIG.colors.good : 
+                       value <= threshold.red ? CONFIG.colors.warning : CONFIG.colors.bad;
+            }
+        }
+        
+        // Formatear valor KPI
+        function formatKPIValue(value, format, noUnit = false) {
+            if (value === undefined || value === null) return 'N/A';
+            
+            let formattedValue;
+            switch(format) {
+                case 'percent': 
+                    formattedValue = value.toFixed(2);
+                    return noUnit ? formattedValue : `${formattedValue}%`;
+                case 'kg': 
+                    formattedValue = value.toFixed(2);
+                    return `${formattedValue} kg`;
+                case 'cm': 
+                    formattedValue = value.toFixed(1);
+                    return `${formattedValue} cm`;
+                case 'number': 
+                    formattedValue = value.toFixed(noUnit ? 2 : 0);
+                    return noUnit ? formattedValue : formattedValue.toLocaleString();
+                default: 
+                    return value.toString();
+            }
+        }
+        
+        // Obtener estado del indicador
+        function getIndicatorStatus(indicator, value) {
+            const color = getColorForIndicator(indicator, value);
+            if (color === CONFIG.colors.good) return '✅ Bueno';
+            if (color === CONFIG.colors.warning) return '⚠️ Regular';
+            return '❌ Crítico';
         }
         
         // Cargar métricas detalladas
@@ -1421,8 +1549,8 @@
                     const metrics = response.metrics;
                     const stats = response.estadisticas;
                     
-                    // Renderizar todas las métricas
-                    const allMetrics = [
+                    // Renderizar todas las métricas de impurezas
+                    const impurityMetrics = [
                         { id: 'picada', title: '% Picada', icon: 'fas fa-cut' },
                         { id: 'mamones', title: '% Mamones', icon: 'fas fa-tree' },
                         { id: 'lalas', title: '% Lalas', icon: 'fas fa-leaf' },
@@ -1431,27 +1559,22 @@
                         { id: 'raices', title: '% Raíces Adheridas', icon: 'fas fa-root' },
                         { id: 'punta', title: '% Punta', icon: 'fas fa-arrow-up' },
                         { id: 'tierra', title: '% Tierra', icon: 'fas fa-mountain' },
-                        { id: 'piedra', title: '% Piedra', icon: 'fas fa-gem' },
-                        { id: 'puntaBasura', title: 'Punta en Basura', icon: 'fas fa-leaf', unit: 'kg' },
-                        { id: 'alturaCorte', title: 'Altura de Corte', icon: 'fas fa-ruler-vertical', unit: 'cm' },
-                        { id: 'usoBandas', title: 'Uso de Bandas', icon: 'fas fa-band-aid' },
-                        { id: 'pegadaCorte', title: 'Pegada de Corte', icon: 'fas fa-cut' }
+                        { id: 'piedra', title: '% Piedra', icon: 'fas fa-gem' }
                     ];
                     
-                    metricsGrid.innerHTML = allMetrics.map(metric => {
+                    metricsGrid.innerHTML = impurityMetrics.map(metric => {
                         if (!metrics.hasOwnProperty(metric.id)) return '';
                         
                         const value = metrics[metric.id];
                         const color = getColorForIndicator(metric.id, value);
-                        const percentage = metric.id.includes('%') ? value : value;
-                        const maxValue = getMaxValueForIndicator(metric.id);
+                        const maxValue = 10; // Máximo 10% para escalar la barra
                         
                         return `
                             <div class="metric-card">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                                     <h4><i class="${metric.icon}"></i> ${metric.title}</h4>
                                     <span style="font-weight: bold; color: ${color}">
-                                        ${metric.unit ? value + ' ' + metric.unit : value + '%'}
+                                        ${value.toFixed(2)}%
                                     </span>
                                 </div>
                                 <div style="height: 10px; background: #eee; border-radius: 5px; overflow: hidden; margin-bottom: 5px;">
@@ -1460,11 +1583,11 @@
                                     </div>
                                 </div>
                                 <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #666;">
-                                    <span>0${metric.unit ? ' ' + metric.unit : '%'}</span>
-                                    <span>${maxValue}${metric.unit ? ' ' + metric.unit : '%'}</span>
+                                    <span>0%</span>
+                                    <span>10%</span>
                                 </div>
-                                <div style="margin-top: 10px; font-size: 0.9rem; color: #666;">
-                                    ${getIndicatorDescription(metric.id)}
+                                <div style="margin-top: 10px; font-size: 0.9rem; color: ${color}; font-weight: 600;">
+                                    ${getIndicatorStatus(metric.id, value)}
                                 </div>
                             </div>
                         `;
@@ -1651,9 +1774,22 @@
                                     label: function(context) {
                                         const label = context.dataset.label || '';
                                         const value = context.parsed.y;
-                                        const unit = getIndicatorUnit(indicator);
+                                        const unit = indicator.includes('%') ? '%' : 
+                                                     indicator === 'puntaBasura' ? ' kg' :
+                                                     indicator === 'alturaCorte' ? ' cm' : '';
                                         return `${label}: ${value.toFixed(2)}${unit}`;
                                     }
+                                }
+                            },
+                            datalabels: {
+                                display: AppState.showLabels.mainChart,
+                                color: '#333',
+                                font: {
+                                    weight: 'bold',
+                                    size: 10
+                                },
+                                formatter: function(value) {
+                                    return value.toFixed(1);
                                 }
                             }
                         },
@@ -1662,7 +1798,9 @@
                                 beginAtZero: false,
                                 title: {
                                     display: true,
-                                    text: getIndicatorUnit(indicator)
+                                    text: indicator.includes('%') ? 'Porcentaje (%)' : 
+                                          indicator === 'puntaBasura' ? 'Kilogramos (kg)' :
+                                          indicator === 'alturaCorte' ? 'Centímetros (cm)' : 'Valor'
                                 },
                                 grid: {
                                     color: 'rgba(0,0,0,0.05)'
@@ -1674,7 +1812,8 @@
                                 }
                             }
                         }
-                    }
+                    },
+                    plugins: [ChartDataLabels]
                 });
             } catch (error) {
                 console.error('Error actualizando gráfico principal:', error);
@@ -1683,7 +1822,7 @@
             }
         }
         
-        // Actualizar gráfico de barras
+        // Actualizar gráfico de barras con colores semaforizados
         async function updateBarChart() {
             const ctx = document.getElementById('barChart').getContext('2d');
             const groupBy = document.getElementById('barChartGroupBy').value;
@@ -1724,7 +1863,7 @@
                             label: INDICATOR_NAMES[indicator] || indicator,
                             data: displayData,
                             backgroundColor: displayColors,
-                            borderColor: displayColors.map(color => color.replace('0.8', '1')),
+                            borderColor: displayColors.map(color => color),
                             borderWidth: 1
                         }]
                     },
@@ -1741,6 +1880,19 @@
                                     label: function(context) {
                                         return `${context.dataset.label}: ${context.parsed.x.toFixed(2)}%`;
                                     }
+                                }
+                            },
+                            datalabels: {
+                                display: AppState.showLabels.barChart,
+                                color: '#333',
+                                font: {
+                                    weight: 'bold',
+                                    size: 10
+                                },
+                                anchor: 'end',
+                                align: 'right',
+                                formatter: function(value) {
+                                    return value.toFixed(1) + '%';
                                 }
                             }
                         },
@@ -1761,7 +1913,8 @@
                                 }
                             }
                         }
-                    }
+                    },
+                    plugins: [ChartDataLabels]
                 });
             } catch (error) {
                 console.error('Error actualizando gráfico de barras:', error);
@@ -1848,12 +2001,35 @@
                             },
                             tooltip: {
                                 mode: 'index',
-                                intersect: false
+                                intersect: false,
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.dataset.label || '';
+                                        const value = context.parsed.y;
+                                        const unit = context.dataset.label.includes('%') ? '%' : '';
+                                        return `${label}: ${value.toFixed(2)}${unit}`;
+                                    }
+                                }
+                            },
+                            datalabels: {
+                                display: AppState.showLabels.comparativeChart,
+                                color: '#333',
+                                font: {
+                                    weight: 'bold',
+                                    size: 8
+                                },
+                                formatter: function(value) {
+                                    return value.toFixed(1);
+                                }
                             }
                         },
                         scales: {
                             y: {
                                 beginAtZero: false,
+                                title: {
+                                    display: true,
+                                    text: 'Porcentaje (%)'
+                                },
                                 grid: {
                                     color: 'rgba(0,0,0,0.05)'
                                 }
@@ -1864,12 +2040,32 @@
                                 }
                             }
                         }
-                    }
+                    },
+                    plugins: [ChartDataLabels]
                 });
             } catch (error) {
                 console.error('Error actualizando gráfico comparativo:', error);
                 ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
                 ctx.fillText('Error cargando datos del gráfico', 10, 50);
+            }
+        }
+        
+        // Alternar etiquetas de gráficos
+        function toggleChartLabels(chartName) {
+            AppState.showLabels[chartName] = !AppState.showLabels[chartName];
+            
+            if (AppState.charts[chartName]) {
+                AppState.charts[chartName].options.plugins.datalabels.display = AppState.showLabels[chartName];
+                AppState.charts[chartName].update();
+                
+                // Actualizar texto del botón
+                const button = document.getElementById(`toggleLabels${chartName.charAt(0).toUpperCase() + chartName.slice(1)}`);
+                if (button) {
+                    const icon = button.querySelector('i');
+                    const text = AppState.showLabels[chartName] ? 'Ocultar Etiquetas' : 'Mostrar Etiquetas';
+                    icon.className = AppState.showLabels[chartName] ? 'fas fa-eye-slash' : 'fas fa-tag';
+                    button.innerHTML = `<i class="${icon.className}"></i> ${text}`;
+                }
             }
         }
         
@@ -1911,86 +2107,201 @@
                 return;
             }
             
-            // Crear contenido HTML para Excel
-            let htmlContent = `
-                <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <style>
-                        table { border-collapse: collapse; width: 100%; }
-                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                        th { background-color: #2e7d32; color: white; }
-                    </style>
-                </head>
-                <body>
-                    <h2>Reporte de Calidad de Cosecha - ${new Date().toLocaleDateString()}</h2>
-                    <table>
-                        <thead>
-                            <tr>
-            `;
+            // Convertir datos a hoja de trabajo
+            const ws = XLSX.utils.json_to_sheet(AppState.data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Datos Calidad");
             
-            // Encabezados
-            const headers = Object.keys(AppState.data[0]);
-            htmlContent += headers.map(header => `<th>${header}</th>`).join('');
-            htmlContent += '</tr></thead><tbody>';
-            
-            // Filas
-            AppState.data.forEach(row => {
-                htmlContent += '<tr>';
-                headers.forEach(header => {
-                    htmlContent += `<td>${row[header] || ''}</td>`;
-                });
-                htmlContent += '</tr>';
-            });
-            
-            htmlContent += `
-                        </tbody>
-                    </table>
-                </body>
-                </html>
-            `;
-            
-            const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            
-            link.setAttribute('href', url);
-            link.setAttribute('download', `reporte_calidad_${new Date().toISOString().slice(0,10)}.xls`);
-            link.style.visibility = 'hidden';
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            // Generar archivo Excel
+            XLSX.writeFile(wb, `datos_calidad_${new Date().toISOString().slice(0,10)}.xlsx`);
             
             showAlert('dataAlert', 'success', 'Datos exportados a Excel');
         }
         
         function exportFullData() {
-            // Similar a exportToExcel pero con más datos
             exportToExcel();
         }
         
-        // Funciones de reportes PDF (simuladas)
-        function generateSummaryReport() {
-            showAlert('dataAlert', 'success', 'Generando reporte resumen... (Función en desarrollo)');
-            // Implementar generación de PDF real aquí
+        // Funciones de generación de reportes
+        async function generateReport(reportType) {
+            showLoading();
+            try {
+                const response = await fetchGAS('generateReport', {
+                    reportType: reportType,
+                    reportData: {
+                        filters: AppState.filters,
+                        user: AppState.user
+                    }
+                });
+                
+                if (response.success) {
+                    // Crear PDF con los datos del reporte
+                    await generatePDFReport(response.report);
+                    showAlert('dataAlert', 'success', response.message);
+                } else {
+                    throw new Error(response.message);
+                }
+            } catch (error) {
+                console.error('Error generando reporte:', error);
+                showAlert('dataAlert', 'error', 'Error generando reporte: ' + error.message);
+            } finally {
+                hideLoading();
+            }
         }
         
-        function generateTrendReport() {
-            showAlert('dataAlert', 'success', 'Generando reporte de tendencias... (Función en desarrollo)');
-        }
-        
-        function generateComparativeReport() {
-            showAlert('dataAlert', 'success', 'Generando reporte comparativo... (Función en desarrollo)');
-        }
-        
-        function generateCustomReport() {
+        async function generateCustomReport() {
             const title = document.getElementById('reportTitle').value;
             const date = document.getElementById('reportDate').value;
-            const includeCharts = document.getElementById('includeCharts').value;
+            const includeCharts = document.getElementById('includeCharts').value === 'yes';
             
-            showAlert('dataAlert', 'success', 
-                `Generando reporte personalizado: ${title} - ${date} - Gráficos: ${includeCharts}`);
+            showLoading();
+            try {
+                const reportData = {
+                    type: 'custom',
+                    title: title,
+                    date: date,
+                    includeCharts: includeCharts,
+                    filters: AppState.filters,
+                    kpis: AppState.kpis,
+                    user: AppState.user
+                };
+                
+                // Generar PDF personalizado
+                await generatePDFReport(reportData);
+                showAlert('dataAlert', 'success', 'Reporte personalizado generado exitosamente');
+            } catch (error) {
+                console.error('Error generando reporte personalizado:', error);
+                showAlert('dataAlert', 'error', 'Error generando reporte personalizado');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        async function generatePDFReport(reportData) {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Configuración inicial
+                const pageWidth = doc.internal.pageSize.width;
+                const margin = 20;
+                const contentWidth = pageWidth - (margin * 2);
+                
+                // Logo (intentamos cargarlo)
+                try {
+                    const logoImg = new Image();
+                    logoImg.crossOrigin = 'Anonymous';
+                    logoImg.src = 'https://www.gporres.com.mx/PFER/Images/Porres400x129.png';
+                    
+                    await new Promise((resolve) => {
+                        logoImg.onload = resolve;
+                        logoImg.onerror = resolve; // Continuar incluso si falla
+                    });
+                    
+                    // Agregar logo si se cargó correctamente
+                    const logoWidth = 60;
+                    const logoHeight = (logoWidth * 129) / 400; // Mantener proporción
+                    doc.addImage(logoImg, 'PNG', margin, 10, logoWidth, logoHeight);
+                } catch (logoError) {
+                    console.log('No se pudo cargar el logo:', logoError);
+                }
+                
+                // Título
+                doc.setFontSize(20);
+                doc.setFont('helvetica', 'bold');
+                doc.text(reportData.title || 'Reporte de Calidad de Cosecha', margin, 40);
+                
+                // Información del reporte
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'normal');
+                doc.text(`Fecha: ${new Date(reportData.date || Date.now()).toLocaleDateString('es-MX')}`, margin, 50);
+                doc.text(`Generado por: ${AppState.user?.name || 'Usuario'}`, margin, 57);
+                
+                // Resumen ejecutivo
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Resumen Ejecutivo', margin, 70);
+                
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                let yPos = 78;
+                
+                if (reportData.metrics) {
+                    const metrics = reportData.metrics;
+                    const importantMetrics = [
+                        { label: 'Muestras Totales', value: metrics.muestrasTotales, unit: '' },
+                        { label: 'Impurezas Totales', value: metrics.impurezasTotales, unit: '%' },
+                        { label: '% Picada', value: metrics.picada, unit: '%' },
+                        { label: '% Mamones', value: metrics.mamones, unit: '%' },
+                        { label: 'Altura de Corte', value: metrics.alturaCorte, unit: 'cm' }
+                    ];
+                    
+                    importantMetrics.forEach(metric => {
+                        if (metric.value !== undefined) {
+                            const text = `${metric.label}: ${metric.value.toFixed(2)}${metric.unit}`;
+                            doc.text(text, margin, yPos);
+                            yPos += 7;
+                        }
+                    });
+                }
+                
+                // Filtros aplicados
+                yPos += 5;
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Filtros Aplicados', margin, yPos);
+                
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                yPos += 8;
+                
+                Object.keys(AppState.filters).forEach(key => {
+                    if (AppState.filters[key] && AppState.filters[key] !== 'Todos' && AppState.filters[key] !== 'Todas') {
+                        const filterText = `${key}: ${AppState.filters[key]}`;
+                        doc.text(filterText, margin, yPos);
+                        yPos += 7;
+                    }
+                });
+                
+                // Recomendaciones
+                yPos += 10;
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Recomendaciones', margin, yPos);
+                
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                yPos += 8;
+                
+                const recommendations = [
+                    '1. Monitorear constantemente los niveles de impurezas',
+                    '2. Capacitar al personal en técnicas de corte adecuadas',
+                    '3. Revisar el mantenimiento del equipo de cosecha',
+                    '4. Implementar controles de calidad más estrictos'
+                ];
+                
+                recommendations.forEach(rec => {
+                    doc.text(rec, margin, yPos);
+                    yPos += 7;
+                });
+                
+                // Pie de página
+                const totalPages = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= totalPages; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(8);
+                    doc.text(`Página ${i} de ${totalPages}`, pageWidth - margin, doc.internal.pageSize.height - 10);
+                    doc.text(`Generado el: ${new Date().toLocaleString('es-MX')}`, margin, doc.internal.pageSize.height - 10);
+                }
+                
+                // Guardar PDF
+                const fileName = `reporte_${reportData.type || 'calidad'}_${new Date().toISOString().slice(0,10)}.pdf`;
+                doc.save(fileName);
+                
+            } catch (error) {
+                console.error('Error generando PDF:', error);
+                throw error;
+            }
         }
         
         // Función para descargar gráfico
@@ -2067,85 +2378,6 @@
             setTimeout(() => {
                 alertDiv.style.display = 'none';
             }, 5000);
-        }
-        
-        function getColorForIndicator(indicator, value) {
-            const threshold = CONFIG.thresholds[indicator];
-            if (!threshold) return CONFIG.colors.primary;
-            
-            if (indicator === 'alturaCorte' || indicator === 'usoBandas' || indicator === 'pegadaCorte') {
-                // Valores más altos son mejores
-                return value >= threshold.good ? CONFIG.colors.good : 
-                       value >= threshold.warning ? CONFIG.colors.warning : CONFIG.colors.bad;
-            } else {
-                // Valores más bajos son mejores
-                return value <= threshold.good ? CONFIG.colors.good : 
-                       value <= threshold.warning ? CONFIG.colors.warning : CONFIG.colors.bad;
-            }
-        }
-        
-        function formatKPIValue(value, format) {
-            if (value === undefined || value === null) return 'N/A';
-            
-            switch(format) {
-                case 'percent': return `${value.toFixed(2)}%`;
-                case 'kg': return `${value.toFixed(2)} kg`;
-                case 'cm': return `${value.toFixed(1)} cm`;
-                case 'number': return value.toLocaleString();
-                default: return value.toString();
-            }
-        }
-        
-        function getIndicatorStatus(indicator, value) {
-            const color = getColorForIndicator(indicator, value);
-            if (color === CONFIG.colors.good) return '✅ Bueno';
-            if (color === CONFIG.colors.warning) return '⚠️ Regular';
-            return '❌ Crítico';
-        }
-        
-        function getIndicatorUnit(indicator) {
-            if (indicator.includes('%') || [
-                'picada', 'mamones', 'lalas', 'tallosSecos', 'tallosDaniados',
-                'raices', 'punta', 'tierra', 'piedra', 'impurezasTotales'
-            ].includes(indicator)) {
-                return '%';
-            } else if (indicator === 'puntaBasura') {
-                return ' kg';
-            } else if (indicator === 'alturaCorte') {
-                return ' cm';
-            } else if (indicator === 'usoBandas' || indicator === 'pegadaCorte') {
-                return ' unidades';
-            }
-            return '';
-        }
-        
-        function getMaxValueForIndicator(indicator) {
-            const maxValues = {
-                picada: 5, mamones: 10, lalas: 2, tallosSecos: 5,
-                tallosDaniados: 2, raices: 1, punta: 5, tierra: 2,
-                piedra: 0.5, puntaBasura: 10, alturaCorte: 30,
-                usoBandas: 5, pegadaCorte: 6
-            };
-            return maxValues[indicator] || 10;
-        }
-        
-        function getIndicatorDescription(indicator) {
-            const descriptions = {
-                picada: 'Caña cortada en trozos pequeños',
-                mamones: 'Brotes laterales no deseados',
-                lalas: 'Hojas secas adheridas',
-                tallosSecos: 'Tallos secos o muertos',
-                tallosDaniados: 'Daño por plagas o enfermedades',
-                raices: 'Raíces que permanecen adheridas',
-                punta: 'Extremo superior no cosechado',
-                tierra: 'Tierra adherida a la caña',
-                piedra: 'Piedras mezcladas con la caña',
-                puntaBasura: 'Partes vegetativas no aprovechables',
-                alturaCorte: 'Altura del corte sobre el suelo',
-                usoBandas: 'Frecuencia de uso de bandas',
-                pegadaCorte: 'Eficiencia del corte'
-            };
-            return descriptions[indicator] || 'Indicador de calidad';
         }
         
         function formatTableCell(value) {
