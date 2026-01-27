@@ -3,38 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Monitoreo de Caña de Azúcar</title>
+    <title>Sistema de Análisis de Calidad de Cosecha</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
-            --primary-color: #10b981;
-            --primary-dark: #059669;
-            --primary-light: #d1fae5;
-            --danger-color: #ef4444;
-            --warning-color: #f59e0b;
-            --success-color: #10b981;
-            --gray-50: #f9fafb;
-            --gray-100: #f3f4f6;
-            --gray-200: #e5e7eb;
-            --gray-300: #d1d5db;
-            --gray-700: #374151;
-            --gray-900: #111827;
+            --primary-color: #2e7d32;
+            --primary-dark: #1b5e20;
+            --primary-light: #4caf50;
+            --secondary-color: #f5f5f5;
+            --text-dark: #333;
+            --text-light: #666;
+            --white: #ffffff;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--gray-50);
-            color: var(--gray-900);
+            background-color: #f8f9fa;
+            color: var(--text-dark);
             line-height: 1.6;
         }
         
@@ -45,13 +44,14 @@
         }
         
         /* Header */
-        .header {
-            background: white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            padding: 1.5rem 0;
+        header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 1000;
         }
         
         .header-content {
@@ -63,187 +63,265 @@
         .logo {
             display: flex;
             align-items: center;
-            gap: 12px;
-        }
-        
-        .logo i {
-            font-size: 2rem;
-            color: var(--primary-color);
-        }
-        
-        .logo h1 {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: var(--gray-900);
-        }
-        
-        .logo span {
-            color: var(--primary-color);
-        }
-        
-        /* Auth Section */
-        .auth-section {
-            display: flex;
             gap: 15px;
+        }
+        
+        .logo-icon {
+            font-size: 2.5rem;
+        }
+        
+        .logo-text h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .logo-text p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .user-info {
+            display: flex;
             align-items: center;
+            gap: 15px;
         }
         
-        .auth-form {
-            background: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            max-width: 400px;
-            margin: 2rem auto;
-            display: none;
+        .btn {
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
         
-        .auth-form.active {
-            display: block;
+        .btn-primary {
+            background-color: var(--primary-light);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background-color: #e0e0e0;
+            color: var(--text-dark);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #d0d0d0;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
         }
         
         /* Main Content */
-        .main-content {
+        main {
+            padding: 30px 0;
+            min-height: calc(100vh - 180px);
+        }
+        
+        /* Auth Screens */
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+        }
+        
+        .auth-box {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .auth-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--primary-dark);
+        }
+        
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        .form-control {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .auth-links {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .auth-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .auth-links a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Dashboard */
+        .dashboard-container {
             display: none;
-            padding: 2rem 0;
         }
         
-        .main-content.active {
-            display: block;
+        /* KPI Cards */
+        .kpi-section {
+            margin-bottom: 30px;
         }
         
-        /* KPIs */
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: var(--primary-dark);
+            font-size: 1.4rem;
+        }
+        
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
         }
         
         .kpi-card {
-            background: white;
-            border-radius: 10px;
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border-left: 4px solid var(--primary-color);
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--box-shadow);
             transition: transform 0.3s ease;
+            border-left: 5px solid var(--primary-color);
         }
         
         .kpi-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
         
         .kpi-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
+            margin-bottom: 15px;
         }
         
         .kpi-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 10px;
-            background: var(--primary-light);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-size: 1.8rem;
             color: var(--primary-color);
-            font-size: 1.5rem;
+        }
+        
+        .kpi-title {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            font-weight: 600;
         }
         
         .kpi-value {
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-weight: 700;
-            color: var(--gray-900);
-            margin-bottom: 0.25rem;
-        }
-        
-        .kpi-label {
-            color: var(--gray-700);
-            font-size: 0.875rem;
-            font-weight: 500;
+            color: var(--text-dark);
+            margin-bottom: 5px;
         }
         
         .kpi-trend {
-            font-size: 0.875rem;
-            font-weight: 500;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            background: var(--primary-light);
-            color: var(--primary-color);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         
-        /* Filters */
+        .kpi-trend.up {
+            color: var(--success);
+        }
+        
+        .kpi-trend.down {
+            color: var(--danger);
+        }
+        
+        /* Filters Section */
         .filters-section {
-            background: white;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 30px;
         }
         
         .filters-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
         }
         
-        .filter-group {
-            margin-bottom: 1rem;
+        .filter-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
         }
         
-        .filter-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: var(--gray-700);
-        }
-        
-        .filter-control {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--gray-300);
-            border-radius: 6px;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            background: white;
-            color: var(--gray-900);
-        }
-        
-        .filter-control:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-        }
-        
-        /* Charts */
+        /* Charts Section */
         .charts-section {
             display: grid;
             grid-template-columns: 2fr 1fr;
-            gap: 2rem;
-            margin-bottom: 2rem;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 1024px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
         }
         
         .chart-container {
-            background: white;
-            border-radius: 10px;
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--box-shadow);
         }
         
         .chart-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
-        }
-        
-        .chart-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--gray-900);
+            margin-bottom: 20px;
         }
         
         .chart-controls {
@@ -251,211 +329,67 @@
             gap: 10px;
         }
         
-        .chart-btn {
-            padding: 0.5rem 1rem;
-            background: var(--gray-100);
-            border: 1px solid var(--gray-300);
-            border-radius: 6px;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--gray-700);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .chart-btn:hover {
-            background: var(--gray-200);
-        }
-        
-        .chart-btn.primary {
-            background: var(--primary-color);
-            border-color: var(--primary-color);
-            color: white;
-        }
-        
-        .chart-btn.primary:hover {
-            background: var(--primary-dark);
-        }
-        
-        .chart-wrapper {
-            position: relative;
-            height: 300px;
-        }
-        
         /* Data Table */
         .data-section {
-            background: white;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 30px;
             overflow-x: auto;
         }
         
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 1rem;
+            margin-top: 20px;
         }
         
         .data-table th {
-            background: var(--gray-50);
-            padding: 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 15px;
             text-align: left;
             font-weight: 600;
-            color: var(--gray-700);
-            border-bottom: 2px solid var(--gray-200);
-            white-space: nowrap;
         }
         
         .data-table td {
-            padding: 1rem;
-            border-bottom: 1px solid var(--gray-200);
-            white-space: nowrap;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
         }
         
         .data-table tr:hover {
-            background: var(--gray-50);
+            background-color: #f9f9f9;
         }
         
         /* Analysis Section */
         .analysis-section {
-            background: white;
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 30px;
         }
         
-        .indicator-grid {
+        .indicators-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-top: 1.5rem;
+            gap: 20px;
+            margin-top: 20px;
         }
         
         .indicator-card {
-            background: var(--gray-50);
-            border-radius: 8px;
-            padding: 1.25rem;
-        }
-        
-        .indicator-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-        
-        .indicator-name {
-            font-weight: 600;
-            color: var(--gray-900);
-        }
-        
-        .indicator-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--gray-900);
-            margin-bottom: 0.5rem;
-        }
-        
-        .indicator-bar {
-            height: 8px;
-            background: var(--gray-200);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 0.5rem;
-        }
-        
-        .indicator-fill {
-            height: 100%;
-            border-radius: 4px;
-        }
-        
-        /* Buttons */
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 6px;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .btn-primary {
-            background: var(--primary-color);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: var(--primary-dark);
-        }
-        
-        .btn-secondary {
-            background: white;
-            color: var(--gray-700);
-            border: 1px solid var(--gray-300);
-        }
-        
-        .btn-secondary:hover {
-            background: var(--gray-50);
-        }
-        
-        .btn-danger {
-            background: var(--danger-color);
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background: #dc2626;
-        }
-        
-        /* Alerts */
-        .alert {
-            padding: 1rem;
-            border-radius: 6px;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .alert-success {
-            background: var(--primary-light);
-            color: var(--primary-dark);
-            border: 1px solid var(--primary-color);
-        }
-        
-        .alert-error {
-            background: #fee2e2;
-            color: #dc2626;
-            border: 1px solid #fca5a5;
-        }
-        
-        .alert-warning {
-            background: #fef3c7;
-            color: #d97706;
-            border: 1px solid #fbbf24;
-        }
-        
-        .alert-info {
-            background: #dbeafe;
-            color: #1d4ed8;
-            border: 1px solid #93c5fd;
+            border: 1px solid #eee;
+            border-radius: var(--border-radius);
+            padding: 20px;
         }
         
         /* Footer */
-        .footer {
-            background: var(--gray-900);
+        footer {
+            background-color: var(--primary-dark);
             color: white;
-            padding: 2rem 0;
-            margin-top: 3rem;
+            padding: 30px 0;
+            margin-top: 50px;
         }
         
         .footer-content {
@@ -466,58 +400,44 @@
         
         .footer-links {
             display: flex;
-            gap: 1.5rem;
+            gap: 20px;
         }
         
         .footer-links a {
-            color: var(--gray-300);
+            color: white;
             text-decoration: none;
-            transition: color 0.2s ease;
         }
         
         .footer-links a:hover {
-            color: white;
+            text-decoration: underline;
         }
         
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .charts-section {
-                grid-template-columns: 1fr;
-            }
+        /* Alerts */
+        .alert {
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
         
-        @media (max-width: 768px) {
-            .kpi-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .filters-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .chart-controls {
-                flex-wrap: wrap;
-            }
-            
-            .header-content {
-                flex-direction: column;
-                gap: 1rem;
-            }
-            
-            .auth-section {
-                width: 100%;
-                justify-content: center;
-            }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
         }
         
-        @media (max-width: 480px) {
-            .kpi-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .chart-wrapper {
-                height: 250px;
-            }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
         }
         
         /* Loading */
@@ -526,394 +446,259 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 3rem;
-            color: var(--gray-700);
+            padding: 50px;
         }
         
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--gray-200);
-            border-top-color: var(--primary-color);
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-bottom: 1rem;
+            margin-bottom: 20px;
         }
         
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         
-        /* Instructions */
-        .instructions {
-            background: var(--primary-light);
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            border-left: 4px solid var(--primary-color);
-        }
-        
-        .instructions h3 {
-            color: var(--primary-dark);
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .instructions-list {
-            list-style: none;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1rem;
-        }
-        
-        .instructions-list li {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            padding: 0.5rem 0;
-        }
-        
-        .instructions-list i {
-            color: var(--primary-color);
-            margin-top: 3px;
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
         }
     </style>
 </head>
 <body>
     <!-- Header -->
-    <header class="header">
+    <header>
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <i class="fas fa-seedling"></i>
-                    <h1>Monitoreo <span>Caña</span></h1>
+                    <div class="logo-icon">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h1>Sistema de Análisis de Calidad de Cosecha</h1>
+                        <p>Monitoreo y análisis de indicadores de calidad</p>
+                    </div>
                 </div>
-                <div class="auth-section">
-                    <button id="loginBtn" class="btn btn-secondary">
-                        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
-                    </button>
-                    <button id="registerBtn" class="btn btn-primary">
-                        <i class="fas fa-user-plus"></i> Registrarse
+                <div class="user-info" id="userInfo">
+                    <span id="userName">Invitado</span>
+                    <button class="btn btn-secondary" id="logoutBtn" style="display: none;">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
                     </button>
                 </div>
             </div>
         </div>
     </header>
-
-    <!-- Login Form -->
-    <div class="container">
-        <div id="loginForm" class="auth-form">
-            <h2 style="margin-bottom: 1.5rem; color: var(--gray-900);">Iniciar Sesión</h2>
-            <div id="loginAlert" class="alert" style="display: none;"></div>
-            <div class="filter-group">
-                <label for="loginEmail">Correo Electrónico</label>
-                <input type="email" id="loginEmail" class="filter-control" placeholder="tu@email.com">
-            </div>
-            <div class="filter-group">
-                <label for="loginPassword">Contraseña</label>
-                <input type="password" id="loginPassword" class="filter-control" placeholder="••••••••">
-            </div>
-            <button id="submitLogin" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;">
-                <i class="fas fa-sign-in-alt"></i> Ingresar
-            </button>
-            <div style="text-align: center; margin-top: 1rem;">
-                <a href="#" id="showRegister" style="color: var(--primary-color); text-decoration: none;">
-                    ¿No tienes cuenta? Regístrate aquí
-                </a>
+    
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Login Screen -->
+        <div id="loginScreen" class="auth-container">
+            <div class="auth-box">
+                <h2 class="auth-title"><i class="fas fa-sign-in-alt"></i> Iniciar Sesión</h2>
+                <div id="loginAlert"></div>
+                <form id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="loginUsername">Usuario</label>
+                        <input type="text" id="loginUsername" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Contraseña</label>
+                        <input type="password" id="loginPassword" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                    </button>
+                </form>
+                <div class="auth-links">
+                    <p>¿No tienes cuenta? <a href="#" id="showRegister">Regístrate aquí</a></p>
+                </div>
             </div>
         </div>
-
-        <!-- Register Form -->
-        <div id="registerForm" class="auth-form">
-            <h2 style="margin-bottom: 1.5rem; color: var(--gray-900);">Crear Cuenta</h2>
-            <div id="registerAlert" class="alert" style="display: none;"></div>
-            <div class="filter-group">
-                <label for="registerEmail">Correo Electrónico</label>
-                <input type="email" id="registerEmail" class="filter-control" placeholder="tu@email.com">
-            </div>
-            <div class="filter-group">
-                <label for="registerPassword">Contraseña</label>
-                <input type="password" id="registerPassword" class="filter-control" placeholder="••••••••">
-            </div>
-            <div class="filter-group">
-                <label for="registerConfirm">Confirmar Contraseña</label>
-                <input type="password" id="registerConfirm" class="filter-control" placeholder="••••••••">
-            </div>
-            <button id="submitRegister" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;">
-                <i class="fas fa-user-plus"></i> Registrar Cuenta
-            </button>
-            <div style="text-align: center; margin-top: 1rem;">
-                <a href="#" id="showLogin" style="color: var(--primary-color); text-decoration: none;">
-                    ¿Ya tienes cuenta? Inicia sesión aquí
-                </a>
+        
+        <!-- Register Screen -->
+        <div id="registerScreen" class="auth-container" style="display: none;">
+            <div class="auth-box">
+                <h2 class="auth-title"><i class="fas fa-user-plus"></i> Crear Cuenta</h2>
+                <div id="registerAlert"></div>
+                <form id="registerForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="registerName">Nombre Completo</label>
+                        <input type="text" id="registerName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerUsername">Usuario</label>
+                        <input type="text" id="registerUsername" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerEmail">Email</label>
+                        <input type="email" id="registerEmail" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">Contraseña</label>
+                        <input type="password" id="registerPassword" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerConfirmPassword">Confirmar Contraseña</label>
+                        <input type="password" id="registerConfirmPassword" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i> Registrarse
+                    </button>
+                </form>
+                <div class="auth-links">
+                    <p>¿Ya tienes cuenta? <a href="#" id="showLogin">Inicia sesión aquí</a></p>
+                </div>
             </div>
         </div>
-    </div>
-
-    <!-- Main Content (visible después del login) -->
-    <div id="mainContent" class="main-content">
-        <div class="container">
-            <!-- Instrucciones -->
-            <div class="instructions">
-                <h3><i class="fas fa-info-circle"></i> Instrucciones de Operación</h3>
-                <ul class="instructions-list">
-                    <li><i class="fas fa-filter"></i> <strong>Filtros:</strong> Utiliza los controles superiores para filtrar datos por ingenio, zona, grupo o supervisor.</li>
-                    <li><i class="fas fa-chart-line"></i> <strong>Gráficos:</strong> Los gráficos se actualizan automáticamente según los filtros aplicados.</li>
-                    <li><i class="fas fa-download"></i> <strong>Exportar:</strong> Descarga gráficos en PNG/SVG o genera un informe PDF completo.</li>
-                    <li><i class="fas fa-table"></i> <strong>Tabla:</strong> Revisa todos los datos filtrados en la tabla inferior.</li>
-                </ul>
-            </div>
-
-            <!-- KPIs -->
-            <div class="kpi-grid">
-                <div class="kpi-card">
-                    <div class="kpi-header">
-                        <div class="kpi-icon">
-                            <i class="fas fa-clipboard-list"></i>
-                        </div>
-                        <span class="kpi-trend" id="samplesTrend">Total</span>
-                    </div>
-                    <div class="kpi-value" id="totalSamples">0</div>
-                    <div class="kpi-label">Muestras Totales</div>
+        
+        <!-- Dashboard -->
+        <div id="dashboard" class="dashboard-container">
+            <!-- KPI Section -->
+            <section class="kpi-section">
+                <h2 class="section-title"><i class="fas fa-chart-line"></i> Indicadores Principales</h2>
+                <div class="kpi-grid" id="kpiGrid">
+                    <!-- KPI cards will be dynamically generated -->
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-header">
-                        <div class="kpi-icon">
-                            <i class="fas fa-trash"></i>
-                        </div>
-                        <span class="kpi-trend" id="impuritiesTrend">0%</span>
-                    </div>
-                    <div class="kpi-value" id="impuritiesAvg">0%</div>
-                    <div class="kpi-label">Impurezas Totales</div>
+            </section>
+            
+            <!-- Filters Section -->
+            <section class="filters-section">
+                <h2 class="section-title"><i class="fas fa-filter"></i> Filtros de Análisis</h2>
+                <div class="filters-grid" id="filtersGrid">
+                    <!-- Filters will be dynamically generated -->
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-header">
-                        <div class="kpi-icon">
-                            <i class="fas fa-ruler-vertical"></i>
-                        </div>
-                        <span class="kpi-trend" id="heightTrend">0cm</span>
-                    </div>
-                    <div class="kpi-value" id="cutHeightAvg">0cm</div>
-                    <div class="kpi-label">Altura de Corte Promedio</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-header">
-                        <div class="kpi-icon">
-                            <i class="fas fa-band-aid"></i>
-                        </div>
-                        <span class="kpi-trend" id="bandsTrend">0</span>
-                    </div>
-                    <div class="kpi-value" id="bandsUsageAvg">0</div>
-                    <div class="kpi-label">Uso de Bandas Promedio</div>
-                </div>
-            </div>
-
-            <!-- Filtros -->
-            <div class="filters-section">
-                <h3 style="margin-bottom: 1.5rem; color: var(--gray-900);">Filtros de Datos</h3>
-                <div class="filters-grid">
-                    <div class="filter-group">
-                        <label for="filterIngenio"><i class="fas fa-industry"></i> Ingenio</label>
-                        <select id="filterIngenio" class="filter-control">
-                            <option value="Todos">Todos los Ingenios</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="filterZona"><i class="fas fa-map-marker-alt"></i> Zona</label>
-                        <select id="filterZona" class="filter-control">
-                            <option value="Todos">Todas las Zonas</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="filterGrupo"><i class="fas fa-users"></i> Grupo de Cosecha</label>
-                        <select id="filterGrupo" class="filter-control">
-                            <option value="Todos">Todos los Grupos</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="filterSupervisor"><i class="fas fa-user-tie"></i> Supervisor de Cosecha</label>
-                        <select id="filterSupervisor" class="filter-control">
-                            <option value="Todos">Todos los Supervisores</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="filterIndicator"><i class="fas fa-chart-bar"></i> Indicador Principal</label>
-                        <select id="filterIndicator" class="filter-control">
-                            <option value="impurezas">Impurezas Totales</option>
-                            <option value="altura">Altura de Corte</option>
-                            <option value="pegada">Pegada de Corte</option>
-                            <option value="bandas">Uso de Bandas</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="filterTime"><i class="fas fa-calendar-alt"></i> Periodo</label>
-                        <select id="filterTime" class="filter-control">
-                            <option value="dia">Por Día</option>
-                            <option value="semana">Por Semana</option>
-                            <option value="mes">Por Mes</option>
-                        </select>
-                    </div>
-                </div>
-                <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                    <button id="applyFilters" class="btn btn-primary">
-                        <i class="fas fa-filter"></i> Aplicar Filtros
+                <div class="filter-actions">
+                    <button class="btn btn-secondary" id="resetFilters">
+                        <i class="fas fa-redo"></i> Limpiar Filtros
                     </button>
-                    <button id="resetFilters" class="btn btn-secondary">
-                        <i class="fas fa-redo"></i> Restablecer
-                    </button>
-                    <button id="generateReport" class="btn btn-primary">
-                        <i class="fas fa-file-pdf"></i> Generar Informe PDF
+                    <button class="btn btn-primary" id="applyFilters">
+                        <i class="fas fa-search"></i> Aplicar Filtros
                     </button>
                 </div>
-            </div>
-
-            <!-- Gráficos Principales -->
-            <div class="charts-section">
-                <!-- Gráfico de Líneas -->
+            </section>
+            
+            <!-- Charts Section -->
+            <section class="charts-section">
                 <div class="chart-container">
                     <div class="chart-header">
-                        <h3 class="chart-title" id="lineChartTitle">Tendencia de Indicadores</h3>
+                        <h3><i class="fas fa-chart-line"></i> Tendencia de Indicadores</h3>
                         <div class="chart-controls">
-                            <button class="chart-btn" id="toggleLabels">
+                            <select id="chartIndicator" class="form-control" style="width: 200px;">
+                                <option value="impurezasTotales">Impurezas Totales</option>
+                                <option value="puntaBasura">Punta en Basura</option>
+                                <option value="alturaCorte">Altura de Corte</option>
+                                <option value="usoBandas">Uso de Bandas</option>
+                                <option value="pegadaCorte">Pegada de Corte</option>
+                            </select>
+                            <button class="btn btn-secondary" id="downloadChart">
+                                <i class="fas fa-download"></i> PNG
+                            </button>
+                            <button class="btn btn-secondary" id="toggleLabels">
                                 <i class="fas fa-tag"></i> Etiquetas
                             </button>
-                            <button class="chart-btn" id="downloadLinePNG">
-                                <i class="fas fa-download"></i> PNG
-                            </button>
-                            <button class="chart-btn" id="downloadLineSVG">
-                                <i class="fas fa-download"></i> SVG
-                            </button>
                         </div>
                     </div>
-                    <div class="chart-wrapper">
-                        <canvas id="lineChart"></canvas>
-                    </div>
+                    <canvas id="mainChart"></canvas>
                 </div>
-
-                <!-- Gráfico de Barras -->
+                
                 <div class="chart-container">
                     <div class="chart-header">
-                        <h3 class="chart-title">Resumen por Zona</h3>
+                        <h3><i class="fas fa-chart-bar"></i> Resumen por Grupo</h3>
                         <div class="chart-controls">
-                            <button class="chart-btn" id="downloadBarPNG">
+                            <button class="btn btn-secondary" id="downloadBarChart">
                                 <i class="fas fa-download"></i> PNG
                             </button>
                         </div>
                     </div>
-                    <div class="chart-wrapper">
-                        <canvas id="barChart"></canvas>
-                    </div>
+                    <canvas id="barChart"></canvas>
                 </div>
-            </div>
-
-            <!-- Gráfico de Comparación -->
-            <div class="chart-container" style="margin-bottom: 2rem;">
+            </section>
+            
+            <!-- Comparative Analysis -->
+            <section class="analysis-section">
                 <div class="chart-header">
-                    <h3 class="chart-title">Comparación de Múltiples Indicadores</h3>
+                    <h3><i class="fas fa-chart-area"></i> Análisis Comparativo</h3>
                     <div class="chart-controls">
-                        <button class="chart-btn" id="toggleComparison">
-                            <i class="fas fa-exchange-alt"></i> Alternar Vista
-                        </button>
-                    </div>
-                </div>
-                <div style="margin-bottom: 1rem;">
-                    <div class="filter-group">
-                        <label><i class="fas fa-layer-group"></i> Seleccionar Indicadores para Comparar:</label>
-                        <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem;">
-                            <label style="display: flex; align-items: center; gap: 5px;">
-                                <input type="checkbox" class="comparisonIndicator" value="impurezas" checked>
-                                Impurezas
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 5px;">
-                                <input type="checkbox" class="comparisonIndicator" value="altura">
-                                Altura Corte
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 5px;">
-                                <input type="checkbox" class="comparisonIndicator" value="pegada">
-                                Pegada Corte
-                            </label>
-                            <label style="display: flex; align-items: center; gap: 5px;">
-                                <input type="checkbox" class="comparisonIndicator" value="bandas">
-                                Uso Bandas
-                            </label>
+                        <div class="indicators-selector">
+                            <label><input type="checkbox" name="compareIndicator" value="impurezasTotales" checked> Impurezas</label>
+                            <label><input type="checkbox" name="compareIndicator" value="puntaBasura"> Punta Basura</label>
+                            <label><input type="checkbox" name="compareIndicator" value="alturaCorte"> Altura Corte</label>
                         </div>
                     </div>
                 </div>
-                <div class="chart-wrapper" style="height: 350px;">
-                    <canvas id="comparisonChart"></canvas>
-                </div>
-            </div>
-
-            <!-- Análisis por Indicadores -->
-            <div class="analysis-section">
+                <canvas id="comparativeChart"></canvas>
+            </section>
+            
+            <!-- Data Table -->
+            <section class="data-section">
                 <div class="chart-header">
-                    <h3 class="chart-title">Análisis Detallado por Indicador</h3>
+                    <h3><i class="fas fa-table"></i> Datos Detallados</h3>
                     <div class="chart-controls">
-                        <select id="analysisGroupBy" class="filter-control" style="width: auto;">
-                            <option value="zona">Agrupar por Zona</option>
-                            <option value="grupo">Agrupar por Grupo</option>
-                            <option value="supervisor">Agrupar por Supervisor</option>
-                            <option value="ingenio">Agrupar por Ingenio</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="indicator-grid" id="indicatorAnalysis">
-                    <!-- Se llena dinámicamente con JavaScript -->
-                </div>
-            </div>
-
-            <!-- Tabla de Datos -->
-            <div class="data-section">
-                <div class="chart-header">
-                    <h3 class="chart-title">Datos Completos</h3>
-                    <div class="chart-controls">
-                        <button id="downloadData" class="chart-btn primary">
+                        <button class="btn btn-primary" id="downloadData">
                             <i class="fas fa-download"></i> Descargar CSV
+                        </button>
+                        <button class="btn btn-primary" id="generatePDF">
+                            <i class="fas fa-file-pdf"></i> Generar PDF
                         </button>
                     </div>
                 </div>
-                <div class="loading" id="tableLoading">
-                    <div class="loading-spinner"></div>
-                    <p>Cargando datos...</p>
-                </div>
-                <div id="dataTableContainer" style="display: none;">
+                <div class="table-responsive">
                     <table class="data-table" id="dataTable">
-                        <thead>
-                            <tr>
-                                <th>Ingenio</th>
-                                <th>No. Muestra</th>
-                                <th>Fecha</th>
-                                <th>Zona</th>
-                                <th>Grupo</th>
-                                <th>Supervisor</th>
-                                <th>% Impurezas</th>
-                                <th>Altura (cm)</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody">
-                            <!-- Datos se insertan aquí -->
-                        </tbody>
+                        <!-- Data will be dynamically populated -->
                     </table>
                 </div>
-                <div id="tableInfo" style="margin-top: 1rem; color: var(--gray-700); font-size: 0.875rem;">
-                    Mostrando <span id="shownCount">0</span> de <span id="totalCount">0</span> registros
+                <div class="loading" id="tableLoading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Cargando datos...</p>
                 </div>
-            </div>
+            </section>
+            
+            <!-- Detailed Analysis -->
+            <section class="analysis-section">
+                <h2 class="section-title"><i class="fas fa-chart-pie"></i> Análisis Detallado por Indicador</h2>
+                <div class="indicators-grid" id="indicatorsGrid">
+                    <!-- Indicator cards will be dynamically generated -->
+                </div>
+            </section>
         </div>
-    </div>
-
+        
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Procesando solicitud...</p>
+        </div>
+    </main>
+    
     <!-- Footer -->
-    <footer class="footer">
+    <footer>
         <div class="container">
             <div class="footer-content">
-                <div>
-                    <p style="color: var(--gray-300);">© 2025 Sistema de Monitoreo de Caña de Azúcar</p>
-                    <p style="color: var(--gray-400); font-size: 0.875rem; margin-top: 0.5rem;">
-                        Conectado a Google Sheets | GitHub Pages
-                    </p>
+                <div class="footer-logo">
+                    <h3><i class="fas fa-seedling"></i> Sistema de Calidad de Cosecha</h3>
+                    <p>Monitoreo y análisis de indicadores de calidad de caña de azúcar</p>
                 </div>
                 <div class="footer-links">
                     <a href="#"><i class="fas fa-question-circle"></i> Ayuda</a>
@@ -923,970 +708,886 @@
             </div>
         </div>
     </footer>
-
+    
     <script>
-    // Configuración global
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwCC87l5cdWR_gzjjLYFxcGnDlfRXVU7j03jCVEt7cAJ9E6o1-DGr3zUeCbVHZbrpH4/exec';
-    let currentUser = null;
-    let allData = [];
-    let filteredData = [];
-    let charts = {};
-    let filterOptions = {};
-
-    // Inicialización
-    document.addEventListener('DOMContentLoaded', function() {
-        initializeAuth();
-        // Los gráficos y filtros se inicializan después del login
-    });
-
-    // ==================== SISTEMA DE AUTENTICACIÓN ====================
-    function initializeAuth() {
-        const loginBtn = document.getElementById('loginBtn');
-        const registerBtn = document.getElementById('registerBtn');
-        const loginForm = document.getElementById('loginForm');
-        const registerForm = document.getElementById('registerForm');
-        const showRegister = document.getElementById('showRegister');
-        const showLogin = document.getElementById('showLogin');
-        const submitLogin = document.getElementById('submitLogin');
-        const submitRegister = document.getElementById('submitRegister');
-
-        // Mostrar formulario de login
-        loginBtn.addEventListener('click', () => {
-            loginForm.classList.add('active');
-            registerForm.classList.remove('active');
+        // Configuración
+        const CONFIG = {
+            GAS_URL: 'https://script.google.com/macros/s/AKfycbwCC87l5cdWR_gzjjLYFxcGnDlfRXVU7j03jCVEt7cAJ9E6o1-DGr3zUeCbVHZbrpH4/exec', // Reemplazar con tu URL
+            colors: {
+                good: '#4caf50',
+                warning: '#ff9800',
+                bad: '#f44336'
+            },
+            thresholds: {
+                impurezasTotales: { good: 5, warning: 10 },
+                puntaBasura: { good: 2, warning: 5 },
+                alturaCorte: { good: 15, warning: 10 },
+                usoBandas: { good: 3, warning: 2 },
+                pegadaCorte: { good: 4, warning: 3 }
+            }
+        };
+        
+        // Estado de la aplicación
+        const AppState = {
+            user: null,
+            filters: {
+                ingenio: 'Todos',
+                grupo: 'Todos',
+                supervisor: 'Todos',
+                zona: 'Todos',
+                semana: 'Todas',
+                fechaInicio: '',
+                fechaFin: ''
+            },
+            data: [],
+            kpis: {},
+            charts: {},
+            filtersData: {}
+        };
+        
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar si hay usuario en sesión
+            const savedUser = localStorage.getItem('quality_user');
+            if (savedUser) {
+                AppState.user = JSON.parse(savedUser);
+                showDashboard();
+                loadFilters();
+                loadData();
+            } else {
+                showLogin();
+            }
+            
+            // Configurar event listeners
+            setupEventListeners();
         });
-
-        // Mostrar formulario de registro
-        registerBtn.addEventListener('click', () => {
-            registerForm.classList.add('active');
-            loginForm.classList.remove('active');
-        });
-
-        // Cambiar a registro
-        showRegister.addEventListener('click', (e) => {
+        
+        // Configurar event listeners
+        function setupEventListeners() {
+            // Login/Register
+            document.getElementById('showRegister').addEventListener('click', showRegister);
+            document.getElementById('showLogin').addEventListener('click', showLogin);
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('registerForm').addEventListener('submit', handleRegister);
+            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+            
+            // Dashboard
+            document.getElementById('applyFilters').addEventListener('click', applyFilters);
+            document.getElementById('resetFilters').addEventListener('click', resetFilters);
+            document.getElementById('downloadData').addEventListener('click', downloadData);
+            document.getElementById('generatePDF').addEventListener('click', generatePDF);
+            document.getElementById('chartIndicator').addEventListener('change', updateMainChart);
+            document.getElementById('downloadChart').addEventListener('click', downloadMainChart);
+            document.getElementById('downloadBarChart').addEventListener('click', downloadBarChart);
+            document.getElementById('toggleLabels').addEventListener('click', toggleChartLabels);
+            
+            // Comparative analysis checkboxes
+            document.querySelectorAll('input[name="compareIndicator"]').forEach(checkbox => {
+                checkbox.addEventListener('change', updateComparativeChart);
+            });
+        }
+        
+        // Mostrar pantalla de login
+        function showLogin() {
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('registerScreen').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('userName').textContent = 'Invitado';
+            document.getElementById('logoutBtn').style.display = 'none';
+        }
+        
+        // Mostrar pantalla de registro
+        function showRegister() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('registerScreen').style.display = 'flex';
+            document.getElementById('dashboard').style.display = 'none';
+        }
+        
+        // Mostrar dashboard
+        function showDashboard() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('registerScreen').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            document.getElementById('userName').textContent = AppState.user.name;
+            document.getElementById('logoutBtn').style.display = 'block';
+        }
+        
+        // Manejar login
+        async function handleLogin(e) {
             e.preventDefault();
-            registerForm.classList.add('active');
-            loginForm.classList.remove('active');
-        });
-
-        // Cambiar a login
-        showLogin.addEventListener('click', (e) => {
+            
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            showLoading();
+            
+            try {
+                const response = await fetchGAS('login', { username, password });
+                
+                if (response.success) {
+                    AppState.user = response.user;
+                    localStorage.setItem('quality_user', JSON.stringify(response.user));
+                    showAlert('loginAlert', 'success', 'Login exitoso');
+                    showDashboard();
+                    loadFilters();
+                    loadData();
+                } else {
+                    showAlert('loginAlert', 'error', response.message || 'Error en login');
+                }
+            } catch (error) {
+                showAlert('loginAlert', 'error', 'Error de conexión con el servidor');
+            } finally {
+                hideLoading();
+            }
+        }
+        
+        // Manejar registro
+        async function handleRegister(e) {
             e.preventDefault();
-            loginForm.classList.add('active');
-            registerForm.classList.remove('active');
-        });
-
-        // Enviar login
-        submitLogin.addEventListener('click', handleLogin);
-
-        // Enviar registro - SOLO ESTE MANEJADOR, NO HAY OTRO
-        submitRegister.addEventListener('click', handleRegister);
-    }
-
-    async function handleLogin() {
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
-        const alertDiv = document.getElementById('loginAlert');
-
-        if (!email || !password) {
-            showAlert(alertDiv, 'Por favor completa todos los campos', 'error');
-            return;
-        }
-
-        showAlert(alertDiv, 'Verificando credenciales...', 'info');
-        console.log('Iniciando login para:', email);
-
-        try {
-            const params = new URLSearchParams();
-            params.append('action', 'login');
-            params.append('email', email);
-            params.append('password', password);
-
-            const response = await fetch(GAS_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                },
-                body: params
-            });
-
-            console.log('Respuesta recibida. Status:', response.status);
-
-            // Verificar si la respuesta es JSON
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                const text = await response.text();
-                console.error('Respuesta no es JSON:', text.substring(0, 500));
-                throw new Error(`El servidor no respondió con JSON: ${text.substring(0, 100)}`);
-            }
-
-            const data = await response.json();
-            console.log('Datos de respuesta login:', data);
-
-            if (data.success) {
-                currentUser = data.user;
-                showAlert(alertDiv, '¡Login exitoso!', 'success');
-                
-                // Ocultar formularios, mostrar contenido principal
-                document.getElementById('loginForm').classList.remove('active');
-                document.getElementById('registerForm').classList.remove('active');
-                document.getElementById('mainContent').classList.add('active');
-                
-                // Cargar datos
-                loadInitialData();
-            } else {
-                showAlert(alertDiv, data.message || 'Error en el login', 'error');
-            }
-        } catch (error) {
-            console.error('Error en login:', error);
-            let errorMessage = 'Error de conexión: ';
             
-            if (error.name === 'AbortError') {
-                errorMessage += 'Tiempo de espera agotado';
-            } else if (error.message.includes('Failed to fetch')) {
-                errorMessage += 'No se pudo conectar con el servidor. Verifica:<br>';
-                errorMessage += '1. Que la URL del GAS sea correcta<br>';
-                errorMessage += '2. Que el GAS esté desplegado como aplicación web<br>';
-                errorMessage += '3. Que tengas conexión a internet';
-            } else {
-                errorMessage += error.message;
+            const name = document.getElementById('registerName').value;
+            const username = document.getElementById('registerUsername').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                showAlert('registerAlert', 'error', 'Las contraseñas no coinciden');
+                return;
             }
             
-            showAlert(alertDiv, errorMessage, 'error');
-        }
-    }
-
-    async function handleRegister() {
-        const email = document.getElementById('registerEmail').value;
-        const password = document.getElementById('registerPassword').value;
-        const confirm = document.getElementById('registerConfirm').value;
-        const alertDiv = document.getElementById('registerAlert');
-
-        if (!email || !password || !confirm) {
-            showAlert(alertDiv, 'Por favor completa todos los campos', 'error');
-            return;
-        }
-
-        if (password !== confirm) {
-            showAlert(alertDiv, 'Las contraseñas no coinciden', 'error');
-            return;
-        }
-
-        if (password.length < 6) {
-            showAlert(alertDiv, 'La contraseña debe tener al menos 6 caracteres', 'error');
-            return;
-        }
-
-        showAlert(alertDiv, 'Creando cuenta...', 'info');
-        console.log('Enviando registro para:', email);
-
-        try {
-            const params = new URLSearchParams();
-            params.append('action', 'register');
-            params.append('email', email);
-            params.append('password', password);
-
-            // Configurar timeout
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 30000);
-
-            const response = await fetch(GAS_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                },
-                body: params,
-                signal: controller.signal
-            });
-
-            clearTimeout(timeoutId);
-            console.log('Respuesta recibida. Status:', response.status);
-
-            // Verificar si la respuesta es JSON
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                const text = await response.text();
-                console.error('Respuesta no es JSON:', text.substring(0, 500));
-                throw new Error(`El servidor no respondió con JSON: ${text.substring(0, 100)}`);
-            }
-
-            const data = await response.json();
-            console.log('Datos de respuesta registro:', data);
-
-            if (data.success) {
-                showAlert(alertDiv, '¡Cuenta creada exitosamente! Ahora puedes iniciar sesión.', 'success');
-                
-                // Cambiar a formulario de login
-                setTimeout(() => {
-                    document.getElementById('registerForm').classList.remove('active');
-                    document.getElementById('loginForm').classList.add('active');
-                    document.getElementById('loginEmail').value = email;
-                    document.getElementById('loginPassword').value = '';
-                    document.getElementById('registerEmail').value = '';
-                    document.getElementById('registerPassword').value = '';
-                    document.getElementById('registerConfirm').value = '';
-                }, 2000);
-            } else {
-                showAlert(alertDiv, `Error: ${data.message || 'Error desconocido'}`, 'error');
-            }
-        } catch (error) {
-            console.error('Error en registro:', error);
-            let errorMessage = 'Error de conexión: ';
+            showLoading();
             
-            if (error.name === 'AbortError') {
-                errorMessage += 'Tiempo de espera agotado (30 segundos)';
-            } else if (error.message.includes('Failed to fetch')) {
-                errorMessage += 'No se pudo conectar con el servidor. Posibles causas:<br>';
-                errorMessage += '1. URL del GAS incorrecta<br>';
-                errorMessage += '2. GAS no desplegado correctamente<br>';
-                errorMessage += '3. Bloqueo de CORS (usa la solución de abajo)';
-            } else {
-                errorMessage += error.message;
-            }
-            
-            showAlert(alertDiv, errorMessage, 'error');
-        }
-    }
-
-    function showAlert(element, message, type) {
-        element.innerHTML = `
-            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-            ${message}
-        `;
-        element.className = `alert alert-${type}`;
-        element.style.display = 'flex';
-    }
-
-    // ==================== CARGA DE DATOS Y FILTROS ====================
-    async function loadInitialData() {
-        try {
-            console.log('Cargando datos iniciales...');
-            const response = await fetch(`${GAS_URL}?action=getInitialData&timestamp=${Date.now()}`);
-            const data = await response.json();
-
-            if (data.success) {
-                filterOptions = data.filterOptions;
-                allData = data.data || [];
-                filteredData = [...allData];
+            try {
+                const response = await fetchGAS('register', { 
+                    username, 
+                    password, 
+                    name, 
+                    email 
+                });
                 
-                updateKPI(data.kpis);
-                updateFilterOptions();
-                initializeCharts();
-                updateCharts();
-                updateDataTable();
-                console.log('Datos cargados exitosamente');
+                if (response.success) {
+                    showAlert('registerAlert', 'success', response.message);
+                    setTimeout(() => showLogin(), 2000);
+                } else {
+                    showAlert('registerAlert', 'error', response.message || 'Error en registro');
+                }
+            } catch (error) {
+                showAlert('registerAlert', 'error', 'Error de conexión con el servidor');
+            } finally {
+                hideLoading();
             }
-        } catch (error) {
-            console.error('Error cargando datos iniciales:', error);
-            showAlert(document.getElementById('loginAlert'), 'Error cargando datos: ' + error.message, 'error');
         }
-    }
-
-    function updateKPI(kpis) {
-        document.getElementById('totalSamples').textContent = kpis.muestrasTotales.toLocaleString();
-        document.getElementById('impuritiesAvg').textContent = kpis.impurezasPromedio.toFixed(2) + '%';
-        document.getElementById('cutHeightAvg').textContent = kpis.alturaPromedio.toFixed(1) + 'cm';
-        document.getElementById('bandsUsageAvg').textContent = kpis.bandasPromedio.toFixed(1);
         
-        // Actualizar tendencias
-        updateTrendColors('impuritiesTrend', kpis.impurezasPromedio, 2, 5);
-        updateTrendColors('heightTrend', kpis.alturaPromedio, 15, 20);
-    }
-
-    function updateTrendColors(elementId, value, warningThreshold, dangerThreshold) {
-        const element = document.getElementById(elementId);
-        if (value <= warningThreshold) {
-            element.style.background = '#d1fae5';
-            element.style.color = '#059669';
-        } else if (value <= dangerThreshold) {
-            element.style.background = '#fef3c7';
-            element.style.color = '#d97706';
-        } else {
-            element.style.background = '#fee2e2';
-            element.style.color = '#dc2626';
+        // Manejar logout
+        function handleLogout() {
+            AppState.user = null;
+            localStorage.removeItem('quality_user');
+            showLogin();
         }
-    }
-
-    function updateFilterOptions() {
-        updateSelectOptions('filterIngenio', ['Todos', ...filterOptions.ingenios || []]);
-        updateSelectOptions('filterZona', ['Todos', ...filterOptions.zonas || []]);
-        updateSelectOptions('filterGrupo', ['Todos', ...filterOptions.grupos || []]);
-        updateSelectOptions('filterSupervisor', ['Todos', ...filterOptions.supervisores || []]);
         
-        // Configurar eventos de filtro
-        document.getElementById('applyFilters').addEventListener('click', applyFilters);
-        document.getElementById('resetFilters').addEventListener('click', resetFilters);
-        document.getElementById('generateReport').addEventListener('click', generatePDFReport);
-    }
-
-    function updateSelectOptions(selectId, options) {
-        const select = document.getElementById(selectId);
-        select.innerHTML = '';
-        options.forEach(option => {
-            const opt = document.createElement('option');
-            opt.value = option;
-            opt.textContent = option;
-            select.appendChild(opt);
-        });
-    }
-
-    async function applyFilters() {
-        const filters = {
-            ingenio: document.getElementById('filterIngenio').value,
-            zona: document.getElementById('filterZona').value,
-            grupo: document.getElementById('filterGrupo').value,
-            supervisor: document.getElementById('filterSupervisor').value
-        };
-
-        try {
-            const response = await fetch(GAS_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({
-                    action: 'filterData',
-                    ...filters
-                })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                filteredData = data.data;
-                updateCharts();
-                updateDataTable();
+        // Cargar filtros disponibles
+        async function loadFilters() {
+            try {
+                const response = await fetchGAS('getFilters');
                 
-                // Recalcular KPIs para datos filtrados
-                const kpis = calculateFilteredKPIs();
-                updateKPI(kpis);
+                if (response.success) {
+                    AppState.filtersData = response.filters;
+                    renderFilters();
+                }
+            } catch (error) {
+                console.error('Error cargando filtros:', error);
             }
-        } catch (error) {
-            console.error('Error aplicando filtros:', error);
         }
-    }
-
-    function calculateFilteredKPIs() {
-        if (filteredData.length === 0) {
-            return {
-                muestrasTotales: 0,
-                impurezasPromedio: 0,
-                alturaPromedio: 0,
-                bandasPromedio: 0,
-                pegadaPromedio: 0,
-                puntaBasuraPromedio: 0
+        
+        // Renderizar filtros en la UI
+        function renderFilters() {
+            const filtersGrid = document.getElementById('filtersGrid');
+            
+            filtersGrid.innerHTML = `
+                <div class="form-group">
+                    <label for="filterIngenio">Ingenio</label>
+                    <select id="filterIngenio" class="form-control">
+                        ${AppState.filtersData.ingenios.map(ingenio => 
+                            `<option value="${ingenio}">${ingenio}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="filterGrupo">Grupo de Cosecha</label>
+                    <select id="filterGrupo" class="form-control">
+                        ${AppState.filtersData.grupos.map(grupo => 
+                            `<option value="${grupo}">${grupo}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="filterSupervisor">Supervisor de Cosecha</label>
+                    <select id="filterSupervisor" class="form-control">
+                        ${AppState.filtersData.supervisores.map(supervisor => 
+                            `<option value="${supervisor}">${supervisor}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="filterZona">Zona</label>
+                    <select id="filterZona" class="form-control">
+                        ${AppState.filtersData.zonas.map(zona => 
+                            `<option value="${zona}">${zona}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="filterSemana">Semana de Evaluación</label>
+                    <select id="filterSemana" class="form-control">
+                        ${AppState.filtersData.semanas.map(semana => 
+                            `<option value="${semana}">${semana}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="filterFechaInicio">Fecha Inicio</label>
+                    <input type="date" id="filterFechaInicio" class="form-control" 
+                           min="${AppState.filtersData.fechaMin}" 
+                           max="${AppState.filtersData.fechaMax}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="filterFechaFin">Fecha Fin</label>
+                    <input type="date" id="filterFechaFin" class="form-control" 
+                           min="${AppState.filtersData.fechaMin}" 
+                           max="${AppState.filtersData.fechaMax}">
+                </div>
+            `;
+            
+            // Establecer valores actuales de filtros
+            document.getElementById('filterIngenio').value = AppState.filters.ingenio;
+            document.getElementById('filterGrupo').value = AppState.filters.grupo;
+            document.getElementById('filterSupervisor').value = AppState.filters.supervisor;
+            document.getElementById('filterZona').value = AppState.filters.zona;
+            document.getElementById('filterSemana').value = AppState.filters.semana;
+            document.getElementById('filterFechaInicio').value = AppState.filters.fechaInicio;
+            document.getElementById('filterFechaFin').value = AppState.filters.fechaFin;
+        }
+        
+        // Aplicar filtros
+        async function applyFilters() {
+            // Obtener valores de filtros
+            AppState.filters = {
+                ingenio: document.getElementById('filterIngenio').value,
+                grupo: document.getElementById('filterGrupo').value,
+                supervisor: document.getElementById('filterSupervisor').value,
+                zona: document.getElementById('filterZona').value,
+                semana: document.getElementById('filterSemana').value,
+                fechaInicio: document.getElementById('filterFechaInicio').value,
+                fechaFin: document.getElementById('filterFechaFin').value
             };
-        }
-
-        let impurezasSum = 0;
-        let alturaSum = 0;
-        let bandasSum = 0;
-        let pegadaSum = 0;
-        let puntaBasuraSum = 0;
-
-        filteredData.forEach(row => {
-            // Sumar impurezas (ejemplo simplificado)
-            impurezasSum += (parseFloat(row['% Picada']) || 0) + 
-                           (parseFloat(row['% Mamones']) || 0);
-            alturaSum += parseFloat(row['Altura del corte (cm)']) || 0;
-            bandasSum += parseInt(row['Uso de bandas']) || 0;
-            pegadaSum += parseInt(row['Pegada de corte (n°)']) || 0;
-            puntaBasuraSum += parseFloat(row['Punta en basura (Kg)']) || 0;
-        });
-
-        return {
-            muestrasTotales: filteredData.length,
-            impurezasPromedio: impurezasSum / filteredData.length / 2,
-            alturaPromedio: alturaSum / filteredData.length,
-            bandasPromedio: bandasSum / filteredData.length,
-            pegadaPromedio: pegadaSum / filteredData.length,
-            puntaBasuraPromedio: puntaBasuraSum / filteredData.length
-        };
-    }
-
-    function resetFilters() {
-        document.getElementById('filterIngenio').value = 'Todos';
-        document.getElementById('filterZona').value = 'Todos';
-        document.getElementById('filterGrupo').value = 'Todos';
-        document.getElementById('filterSupervisor').value = 'Todos';
-        document.getElementById('filterIndicator').value = 'impurezas';
-        document.getElementById('filterTime').value = 'dia';
-        
-        filteredData = [...allData];
-        updateCharts();
-        updateDataTable();
-        
-        // Restaurar KPIs originales
-        if (allData.length > 0) {
-            const kpis = calculateFilteredKPIs();
-            updateKPI(kpis);
-        }
-    }
-
-    // ==================== GRÁFICOS ====================
-    function initializeCharts() {
-        // Gráfico de líneas
-        const lineCtx = document.getElementById('lineChart').getContext('2d');
-        charts.line = new Chart(lineCtx, {
-            type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'Indicador',
-                    data: [],
-                    borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: true },
-                    tooltip: { mode: 'index', intersect: false }
-                },
-                scales: {
-                    x: { grid: { display: true } },
-                    y: { 
-                        grid: { display: true },
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-
-        // Gráfico de barras
-        const barCtx = document.getElementById('barChart').getContext('2d');
-        charts.bar = new Chart(barCtx, {
-            type: 'bar',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'Valor',
-                    data: [],
-                    backgroundColor: [],
-                    borderColor: [],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    x: { beginAtZero: true }
-                }
-            }
-        });
-
-        // Gráfico de comparación
-        const compCtx = document.getElementById('comparisonChart').getContext('2d');
-        charts.comparison = new Chart(compCtx, {
-            type: 'bar',
-            data: {
-                labels: [],
-                datasets: []
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'top' }
-                },
-                scales: {
-                    x: { grid: { display: true } },
-                    y: { beginAtZero: true }
-                }
-            }
-        });
-
-        // Configurar controles de gráficos
-        setupChartControls();
-    }
-
-    function setupChartControls() {
-        // Descargar gráficos
-        document.getElementById('downloadLinePNG').addEventListener('click', () => {
-            downloadChart(charts.line, 'line-chart.png');
-        });
-        
-        document.getElementById('downloadLineSVG').addEventListener('click', () => {
-            downloadChart(charts.line, 'line-chart.svg', 'svg');
-        });
-        
-        document.getElementById('downloadBarPNG').addEventListener('click', () => {
-            downloadChart(charts.bar, 'bar-chart.png');
-        });
-
-        // Alternar etiquetas
-        document.getElementById('toggleLabels').addEventListener('click', function() {
-            const show = charts.line.options.plugins.datalabels = 
-                !charts.line.options.plugins.datalabels;
-            charts.line.update();
-            this.innerHTML = show ? 
-                '<i class="fas fa-tag"></i> Ocultar Etiquetas' : 
-                '<i class="fas fa-tag"></i> Mostrar Etiquetas';
-        });
-
-        // Actualizar gráfico de comparación
-        document.querySelectorAll('.comparisonIndicator').forEach(checkbox => {
-            checkbox.addEventListener('change', updateComparisonChart);
-        });
-        
-        document.getElementById('toggleComparison').addEventListener('click', function() {
-            const isBar = charts.comparison.config.type === 'bar';
-            charts.comparison.config.type = isBar ? 'line' : 'bar';
-            charts.comparison.update();
-            this.innerHTML = isBar ? 
-                '<i class="fas fa-chart-line"></i> Ver Líneas' : 
-                '<i class="fas fa-chart-bar"></i> Ver Barras';
-        });
-
-        // Análisis por grupo
-        document.getElementById('analysisGroupBy').addEventListener('change', updateIndicatorAnalysis);
-    }
-
-    function downloadChart(chart, filename, format = 'png') {
-        const link = document.createElement('a');
-        link.download = filename;
-        link.href = chart.toBase64Image(format === 'svg' ? 'image/svg+xml' : 'image/png');
-        link.click();
-    }
-
-    function updateCharts() {
-        updateLineChart();
-        updateBarChart();
-        updateComparisonChart();
-        updateIndicatorAnalysis();
-    }
-
-    function updateLineChart() {
-        if (filteredData.length === 0) return;
-
-        const indicator = document.getElementById('filterIndicator').value;
-        const timePeriod = document.getElementById('filterTime').value;
-        
-        // Agrupar datos por período de tiempo
-        const groupedData = groupDataByTime(filteredData, timePeriod);
-        
-        // Preparar datos para el gráfico
-        const labels = Object.keys(groupedData);
-        const values = Object.values(groupedData).map(group => {
-            return calculateGroupAverage(group, indicator);
-        });
-
-        // Actualizar gráfico
-        charts.line.data.labels = labels;
-        charts.line.data.datasets[0].data = values;
-        charts.line.data.datasets[0].label = getIndicatorLabel(indicator);
-        charts.line.update();
-        
-        // Actualizar título
-        document.getElementById('lineChartTitle').textContent = 
-            `Tendencia de ${getIndicatorLabel(indicator)} por ${timePeriod === 'dia' ? 'Día' : timePeriod === 'semana' ? 'Semana' : 'Mes'}`;
-    }
-
-    function groupDataByTime(data, period) {
-        const groups = {};
-        
-        data.forEach(row => {
-            const date = new Date(row.Fecha);
-            let key;
             
-            switch(period) {
-                case 'semana':
-                    const week = getWeekNumber(date);
-                    key = `Sem ${week}`;
-                    break;
-                case 'mes':
-                    key = date.toLocaleDateString('es-ES', { month: 'short' });
-                    break;
-                default: // día
-                    key = date.toLocaleDateString('es-ES');
-            }
-            
-            if (!groups[key]) groups[key] = [];
-            groups[key].push(row);
-        });
-        
-        return groups;
-    }
-
-    function getWeekNumber(date) {
-        const firstDay = new Date(date.getFullYear(), 0, 1);
-        const days = Math.floor((date - firstDay) / (24 * 60 * 60 * 1000));
-        return Math.ceil((days + firstDay.getDay() + 1) / 7);
-    }
-
-    function calculateGroupAverage(group, indicator) {
-        if (group.length === 0) return 0;
-        
-        let sum = 0;
-        group.forEach(row => {
-            switch(indicator) {
-                case 'impurezas':
-                    sum += (parseFloat(row['% Picada']) || 0) + 
-                           (parseFloat(row['% Mamones']) || 0);
-                    break;
-                case 'altura':
-                    sum += parseFloat(row['Altura del corte (cm)']) || 0;
-                    break;
-                case 'pegada':
-                    sum += parseInt(row['Pegada de corte (n°)']) || 0;
-                    break;
-                case 'bandas':
-                    sum += parseInt(row['Uso de bandas']) || 0;
-                    break;
-            }
-        });
-        
-        return indicator === 'impurezas' ? sum / group.length / 2 : sum / group.length;
-    }
-
-    function getIndicatorLabel(indicator) {
-        const labels = {
-            impurezas: 'Impurezas Totales (%)',
-            altura: 'Altura de Corte (cm)',
-            pegada: 'Pegada de Corte (n°)',
-            bandas: 'Uso de Bandas'
-        };
-        return labels[indicator] || indicator;
-    }
-
-    function updateBarChart() {
-        if (filteredData.length === 0) return;
-
-        // Agrupar por zona
-        const zonas = {};
-        filteredData.forEach(row => {
-            const zona = row.Zona || 'Sin Zona';
-            if (!zonas[zona]) zonas[zona] = [];
-            zonas[zona].push(row);
-        });
-
-        // Preparar datos
-        const labels = Object.keys(zonas);
-        const values = Object.values(zonas).map(group => group.length);
-        
-        // Colores semáforo basados en el promedio de impurezas
-        const colors = Object.values(zonas).map(group => {
-            const avgImpurity = calculateGroupAverage(group, 'impurezas');
-            return getTrafficLightColor(avgImpurity, 2, 5);
-        });
-
-        // Actualizar gráfico
-        charts.bar.data.labels = labels;
-        charts.bar.data.datasets[0].data = values;
-        charts.bar.data.datasets[0].backgroundColor = colors;
-        charts.bar.data.datasets[0].borderColor = colors.map(c => c.replace('0.8', '1'));
-        charts.bar.update();
-    }
-
-    function getTrafficLightColor(value, warning, danger) {
-        if (value <= warning) {
-            return 'rgba(16, 185, 129, 0.8)'; // Verde
-        } else if (value <= danger) {
-            return 'rgba(245, 158, 11, 0.8)'; // Amarillo
-        } else {
-            return 'rgba(239, 68, 68, 0.8)'; // Rojo
+            // Cargar datos con filtros
+            await loadData();
         }
-    }
-
-    function updateComparisonChart() {
-        if (filteredData.length === 0) return;
-
-        const selectedIndicators = Array.from(
-            document.querySelectorAll('.comparisonIndicator:checked')
-        ).map(cb => cb.value);
-
-        if (selectedIndicators.length === 0) return;
-
-        // Agrupar por zona
-        const zonas = {};
-        filteredData.forEach(row => {
-            const zona = row.Zona || 'Sin Zona';
-            if (!zonas[zona]) zonas[zona] = [];
-            zonas[zona].push(row);
-        });
-
-        const labels = Object.keys(zonas);
-        const datasets = selectedIndicators.map((indicator, index) => {
-            const values = Object.values(zonas).map(group => 
-                calculateGroupAverage(group, indicator)
-            );
-            
-            return {
-                label: getIndicatorLabel(indicator),
-                data: values,
-                backgroundColor: getIndicatorColor(indicator, index),
-                borderColor: getIndicatorColor(indicator, index).replace('0.6', '1'),
-                borderWidth: 1
+        
+        // Resetear filtros
+        function resetFilters() {
+            AppState.filters = {
+                ingenio: 'Todos',
+                grupo: 'Todos',
+                supervisor: 'Todos',
+                zona: 'Todos',
+                semana: 'Todas',
+                fechaInicio: '',
+                fechaFin: ''
             };
-        });
-
-        charts.comparison.data.labels = labels;
-        charts.comparison.data.datasets = datasets;
-        charts.comparison.update();
-    }
-
-    function getIndicatorColor(indicator, index) {
-        const colors = [
-            'rgba(16, 185, 129, 0.6)',  // Verde
-            'rgba(59, 130, 246, 0.6)',  // Azul
-            'rgba(245, 158, 11, 0.6)',  // Amarillo
-            'rgba(139, 92, 246, 0.6)',  // Púrpura
-            'rgba(239, 68, 68, 0.6)'    // Rojo
-        ];
-        return colors[index % colors.length];
-    }
-
-    function updateIndicatorAnalysis() {
-        if (filteredData.length === 0) return;
-
-        const groupBy = document.getElementById('analysisGroupBy').value;
+            
+            renderFilters();
+            loadData();
+        }
         
-        // Agrupar datos
-        const groups = {};
-        filteredData.forEach(row => {
-            const key = row[getGroupByField(groupBy)] || `Sin ${groupBy}`;
-            if (!groups[key]) groups[key] = [];
-            groups[key].push(row);
-        });
-
-        // Calcular métricas para cada grupo
-        const analysisHTML = Object.entries(groups).map(([groupName, groupData]) => {
-            const metrics = calculateGroupMetrics(groupData);
-            return createIndicatorCard(groupName, metrics, groupData.length);
-        }).join('');
-
-        document.getElementById('indicatorAnalysis').innerHTML = analysisHTML;
-    }
-
-    function getGroupByField(groupBy) {
-        const fields = {
-            zona: 'Zona',
-            grupo: 'Grupo de cosecha',
-            supervisor: 'Supervisor de cosecha',
-            ingenio: 'Ingenio'
-        };
-        return fields[groupBy] || groupBy;
-    }
-
-    function calculateGroupMetrics(groupData) {
-        if (groupData.length === 0) return {};
-
-        let impurezas = 0;
-        let altura = 0;
-        let pegada = 0;
-        let bandas = 0;
-
-        groupData.forEach(row => {
-            impurezas += (parseFloat(row['% Picada']) || 0) + 
-                        (parseFloat(row['% Mamones']) || 0);
-            altura += parseFloat(row['Altura del corte (cm)']) || 0;
-            pegada += parseInt(row['Pegada de corte (n°)']) || 0;
-            bandas += parseInt(row['Uso de bandas']) || 0;
-        });
-
-        const count = groupData.length;
-        return {
-            impurezas: impurezas / count / 2,
-            altura: altura / count,
-            pegada: pegada / count,
-            bandas: bandas / count
-        };
-    }
-
-    function createIndicatorCard(groupName, metrics, sampleCount) {
-        const impurezasColor = getTrafficLightColor(metrics.impurezas, 2, 5);
-        const alturaColor = getTrafficLightColor(20 - metrics.altura, 5, 10); // Invertido: más alto es mejor
-
-        return `
-            <div class="indicator-card">
-                <div class="indicator-header">
-                    <div class="indicator-name">${groupName}</div>
-                    <div style="font-size: 0.875rem; color: var(--gray-600);">
-                        ${sampleCount} muestras
-                    </div>
-                </div>
-                <div class="indicator-value">${metrics.impurezas.toFixed(2)}%</div>
-                <div class="indicator-bar">
-                    <div class="indicator-fill" style="width: ${Math.min(metrics.impurezas * 10, 100)}%; background: ${impurezasColor};"></div>
-                </div>
-                <div style="font-size: 0.875rem; color: var(--gray-600); margin-bottom: 0.5rem;">
-                    Impurezas Totales
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem;">
-                    <div>
-                        <div style="font-size: 0.75rem; color: var(--gray-600);">Altura</div>
-                        <div style="font-weight: 600;">${metrics.altura.toFixed(1)}cm</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 0.75rem; color: var(--gray-600);">Bandas</div>
-                        <div style="font-weight: 600;">${metrics.bandas.toFixed(1)}</div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    // ==================== TABLA DE DATOS ====================
-    function updateDataTable() {
-        const tableBody = document.getElementById('tableBody');
-        const tableLoading = document.getElementById('tableLoading');
-        const tableContainer = document.getElementById('dataTableContainer');
-        const shownCount = document.getElementById('shownCount');
-        const totalCount = document.getElementById('totalCount');
-
-        // Mostrar loading
-        tableLoading.style.display = 'flex';
-        tableContainer.style.display = 'none';
-
-        // Limitar a 100 registros para rendimiento
-        const displayData = filteredData.slice(0, 100);
-
-        setTimeout(() => {
-            // Generar filas de tabla
-            const rows = displayData.map(row => `
-                <tr>
-                    <td>${row.Ingenio || ''}</td>
-                    <td>${row['No. Muestra'] || ''}</td>
-                    <td>${row.Fecha || ''}</td>
-                    <td>${row.Zona || ''}</td>
-                    <td>${row['Grupo de cosecha'] || ''}</td>
-                    <td>${row['Supervisor de cosecha'] || ''}</td>
-                    <td>${((parseFloat(row['% Picada']) || 0) + (parseFloat(row['% Mamones']) || 0)).toFixed(2)}%</td>
-                    <td>${row['Altura del corte (cm)'] || ''}</td>
-                    <td>
-                        <span style="
-                            display: inline-block;
-                            padding: 0.25rem 0.5rem;
-                            border-radius: 4px;
-                            font-size: 0.75rem;
-                            font-weight: 500;
-                            background: ${row['Conformidad de calidad de cosecha'] === 'conforme' ? 
-                                '#d1fae5' : '#fee2e2'};
-                            color: ${row['Conformidad de calidad de cosecha'] === 'conforme' ? 
-                                '#059669' : '#dc2626'};
-                        ">
-                            ${row['Conformidad de calidad de cosecha'] || 'No conforme'}
-                        </span>
-                    </td>
-                </tr>
-            `).join('');
-
-            tableBody.innerHTML = rows;
-            shownCount.textContent = displayData.length;
-            totalCount.textContent = filteredData.length;
-
-            // Ocultar loading, mostrar tabla
-            tableLoading.style.display = 'none';
-            tableContainer.style.display = 'block';
-        }, 500);
-
-        // Configurar botón de descarga
-        document.getElementById('downloadData').addEventListener('click', downloadDataCSV);
-    }
-
-    function downloadDataCSV() {
-        if (filteredData.length === 0) return;
-
-        // Crear cabeceras CSV
-        const headers = Object.keys(filteredData[0]);
-        const csvRows = [
-            headers.join(','),
-            ...filteredData.map(row => 
-                headers.map(header => {
-                    const value = row[header] || '';
-                    return `"${value.toString().replace(/"/g, '""')}"`;
-                }).join(',')
-            )
-        ];
-
-        const csvContent = csvRows.join('\n');
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `datos-cana-${new Date().toISOString().split('T')[0]}.csv`;
-        link.click();
-    }
-
-    // ==================== GENERAR INFORME PDF ====================
-    async function generatePDFReport() {
-        try {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('p', 'mm', 'a4');
+        // Cargar datos
+        async function loadData() {
+            showTableLoading();
             
-            // Título
-            doc.setFontSize(20);
-            doc.setTextColor(16, 185, 129);
-            doc.text('Informe de Monitoreo de Caña', 105, 20, { align: 'center' });
+            try {
+                // Cargar KPIs
+                const kpiResponse = await fetchGAS('getKPIs', AppState.filters);
+                
+                if (kpiResponse.success) {
+                    AppState.kpis = kpiResponse.kpis;
+                    renderKPIs();
+                }
+                
+                // Cargar datos completos
+                const dataResponse = await fetchGAS('getData', AppState.filters);
+                
+                if (dataResponse.success) {
+                    AppState.data = dataResponse.data;
+                    renderDataTable(dataResponse.data, dataResponse.headers);
+                    updateCharts();
+                }
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+            } finally {
+                hideTableLoading();
+            }
+        }
+        
+        // Renderizar KPIs
+        function renderKPIs() {
+            const kpiGrid = document.getElementById('kpiGrid');
             
-            // Metadatos
-            doc.setFontSize(10);
-            doc.setTextColor(100, 100, 100);
-            doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 20, 30);
-            doc.text(`Usuario: ${currentUser?.email || 'No autenticado'}`, 20, 35);
-            doc.text(`Muestras: ${filteredData.length}`, 20, 40);
-            
-            // KPIs
-            doc.setFontSize(14);
-            doc.setTextColor(0, 0, 0);
-            doc.text('Resumen de Indicadores', 20, 55);
-            
-            const kpis = calculateFilteredKPIs();
-            const kpiText = [
-                `Muestras Totales: ${kpis.muestrasTotales}`,
-                `Impurezas Promedio: ${kpis.impurezasPromedio.toFixed(2)}%`,
-                `Altura de Corte Promedio: ${kpis.alturaPromedio.toFixed(1)}cm`,
-                `Uso de Bandas Promedio: ${kpis.bandasPromedio.toFixed(1)}`
+            const kpis = [
+                {
+                    id: 'muestrasTotales',
+                    title: 'Muestras Totales',
+                    value: AppState.kpis.muestrasTotales || 0,
+                    icon: 'fas fa-clipboard-list',
+                    format: 'number',
+                    color: getColorForKPI('muestrasTotales', AppState.kpis.muestrasTotales)
+                },
+                {
+                    id: 'impurezasTotales',
+                    title: 'Impurezas Totales',
+                    value: AppState.kpis.impurezasTotales ? AppState.kpis.impurezasTotales.toFixed(2) : '0.00',
+                    icon: 'fas fa-trash',
+                    format: 'percent',
+                    color: getColorForKPI('impurezasTotales', AppState.kpis.impurezasTotales)
+                },
+                {
+                    id: 'puntaBasura',
+                    title: 'Punta en Basura',
+                    value: AppState.kpis.puntaBasura ? AppState.kpis.puntaBasura.toFixed(2) : '0.00',
+                    icon: 'fas fa-leaf',
+                    format: 'kg',
+                    color: getColorForKPI('puntaBasura', AppState.kpis.puntaBasura)
+                },
+                {
+                    id: 'alturaCorte',
+                    title: 'Altura de Corte',
+                    value: AppState.kpis.alturaCorte ? AppState.kpis.alturaCorte.toFixed(2) : '0.00',
+                    icon: 'fas fa-ruler-vertical',
+                    format: 'cm',
+                    color: getColorForKPI('alturaCorte', AppState.kpis.alturaCorte)
+                },
+                {
+                    id: 'usoBandas',
+                    title: 'Uso de Bandas',
+                    value: AppState.kpis.usoBandas ? AppState.kpis.usoBandas.toFixed(2) : '0.00',
+                    icon: 'fas fa-band-aid',
+                    format: 'number',
+                    color: getColorForKPI('usoBandas', AppState.kpis.usoBandas)
+                },
+                {
+                    id: 'pegadaCorte',
+                    title: 'Pegada de Corte',
+                    value: AppState.kpis.pegadaCorte ? AppState.kpis.pegadaCorte.toFixed(2) : '0.00',
+                    icon: 'fas fa-cut',
+                    format: 'number',
+                    color: getColorForKPI('pegadaCorte', AppState.kpis.pegadaCorte)
+                }
             ];
             
-            doc.setFontSize(11);
-            kpiText.forEach((text, i) => {
-                doc.text(text, 20, 65 + (i * 7));
-            });
+            kpiGrid.innerHTML = kpis.map(kpi => `
+                <div class="kpi-card" style="border-left-color: ${kpi.color}">
+                    <div class="kpi-header">
+                        <div class="kpi-title">${kpi.title}</div>
+                        <div class="kpi-icon"><i class="${kpi.icon}"></i></div>
+                    </div>
+                    <div class="kpi-value">${formatKPIValue(kpi.value, kpi.format)}</div>
+                    <div class="kpi-trend ${getTrendClass(kpi.id)}">
+                        <i class="fas ${getTrendIcon(kpi.id)}"></i>
+                        ${getTrendText(kpi.id)}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Renderizar tabla de datos
+        function renderDataTable(data, headers) {
+            const table = document.getElementById('dataTable');
             
-            // Filtros aplicados
-            doc.setFontSize(14);
-            doc.text('Filtros Aplicados', 20, 100);
-            doc.setFontSize(11);
-            
-            const filters = {
-                'Ingenio': document.getElementById('filterIngenio').value,
-                'Zona': document.getElementById('filterZona').value,
-                'Grupo': document.getElementById('filterGrupo').value,
-                'Supervisor': document.getElementById('filterSupervisor').value
-            };
-            
-            Object.entries(filters).forEach(([key, value], i) => {
-                doc.text(`${key}: ${value}`, 20, 110 + (i * 7));
-            });
-            
-            // Capturar gráfico principal
-            const chartCanvas = document.getElementById('lineChart');
-            if (chartCanvas) {
-                const chartImage = await html2canvas(chartCanvas);
-                const imgData = chartImage.toDataURL('image/png');
-                doc.addPage();
-                doc.text('Gráfico de Tendencia', 20, 20);
-                doc.addImage(imgData, 'PNG', 20, 30, 170, 80);
+            if (data.length === 0) {
+                table.innerHTML = `
+                    <tr>
+                        <td colspan="${headers.length}" style="text-align: center; padding: 40px;">
+                            No hay datos para los filtros seleccionados
+                        </td>
+                    </tr>
+                `;
+                return;
             }
             
-            // Guardar PDF
-            doc.save(`informe-cana-${new Date().toISOString().split('T')[0]}.pdf`);
+            // Crear encabezados
+            let thead = `<tr>${headers.map(header => `<th>${header}</th>`).join('')}</tr>`;
             
-        } catch (error) {
-            console.error('Error generando PDF:', error);
-            alert('Error al generar el informe PDF. Por favor, intente nuevamente.');
+            // Crear filas (limitar a 50 para rendimiento)
+            const displayData = data.slice(0, 50);
+            let tbody = '';
+            
+            displayData.forEach(row => {
+                tbody += `<tr>${headers.map(header => `<td>${row[header] || ''}</td>`).join('')}</tr>`;
+            });
+            
+            table.innerHTML = thead + tbody;
+            
+            // Mostrar mensaje si hay más datos
+            if (data.length > 50) {
+                const messageRow = `<tr><td colspan="${headers.length}" style="text-align: center; font-style: italic;">
+                    Mostrando 50 de ${data.length} registros. Use filtros para reducir los resultados.
+                </td></tr>`;
+                table.innerHTML += messageRow;
+            }
         }
-    }
-</script>
+        
+        // Actualizar gráficos
+        function updateCharts() {
+            updateMainChart();
+            updateBarChart();
+            updateComparativeChart();
+            updateIndicatorCards();
+        }
+        
+        // Actualizar gráfico principal
+        function updateMainChart() {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            const indicator = document.getElementById('chartIndicator').value;
+            
+            // Destruir gráfico anterior si existe
+            if (AppState.charts.main) {
+                AppState.charts.main.destroy();
+            }
+            
+            // Preparar datos para el gráfico (simulado - en producción usar datos reales)
+            const labels = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6', 'Sem 7', 'Sem 8'];
+            const data = labels.map(() => {
+                const baseValue = {
+                    impurezasTotales: 8,
+                    puntaBasura: 3,
+                    alturaCorte: 12,
+                    usoBandas: 3.5,
+                    pegadaCorte: 4.2
+                }[indicator];
+                
+                return baseValue + (Math.random() * 4 - 2);
+            });
+            
+            // Determinar color basado en valores
+            const lineColor = getColorForValue(indicator, data[data.length - 1]);
+            
+            AppState.charts.main = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: getIndicatorLabel(indicator),
+                        data: data,
+                        borderColor: lineColor,
+                        backgroundColor: lineColor + '20',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: getIndicatorUnit(indicator)
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Actualizar gráfico de barras
+        function updateBarChart() {
+            const ctx = document.getElementById('barChart').getContext('2d');
+            
+            // Destruir gráfico anterior si existe
+            if (AppState.charts.bar) {
+                AppState.charts.bar.destroy();
+            }
+            
+            // Datos simulados por grupo
+            const grupos = ['10100', '10400', '10500', '10600', '10900', '30400'];
+            const impurezasData = grupos.map(() => 5 + Math.random() * 10);
+            
+            // Asignar colores basados en valores
+            const backgroundColors = impurezasData.map(value => 
+                getColorForValue('impurezasTotales', value)
+            );
+            
+            AppState.charts.bar = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: grupos,
+                    datasets: [{
+                        label: 'Impurezas Totales (%)',
+                        data: impurezasData,
+                        backgroundColor: backgroundColors,
+                        borderColor: backgroundColors.map(color => color.replace('0.8', '1')),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Porcentaje (%)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Actualizar gráfico comparativo
+        function updateComparativeChart() {
+            const ctx = document.getElementById('comparativeChart').getContext('2d');
+            const selectedIndicators = Array.from(
+                document.querySelectorAll('input[name="compareIndicator"]:checked')
+            ).map(cb => cb.value);
+            
+            // Destruir gráfico anterior si existe
+            if (AppState.charts.comparative) {
+                AppState.charts.comparative.destroy();
+            }
+            
+            if (selectedIndicators.length === 0) {
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                ctx.fillText('Seleccione al menos un indicador para comparar', 10, 50);
+                return;
+            }
+            
+            // Datos simulados
+            const semanas = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6', 'Sem 7'];
+            
+            const datasets = selectedIndicators.map(indicator => {
+                const baseValues = {
+                    impurezasTotales: [7, 8, 9, 8.5, 7.5, 8, 8.5],
+                    puntaBasura: [2.5, 3, 3.5, 3, 2.8, 3.2, 3],
+                    alturaCorte: [13, 12, 11, 12.5, 13.5, 12, 11.5]
+                }[indicator] || [5, 6, 7, 6.5, 5.5, 6, 6.5];
+                
+                // Agregar variación aleatoria
+                const data = baseValues.map(value => value + (Math.random() * 2 - 1));
+                
+                return {
+                    label: getIndicatorLabel(indicator),
+                    data: data,
+                    borderColor: getIndicatorColor(indicator),
+                    backgroundColor: getIndicatorColor(indicator) + '20',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.4
+                };
+            });
+            
+            AppState.charts.comparative = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: semanas,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Actualizar tarjetas de indicadores detallados
+        function updateIndicatorCards() {
+            const indicatorsGrid = document.getElementById('indicatorsGrid');
+            
+            const indicators = [
+                { id: 'picada', name: '% Picada', value: 0.5, icon: 'fas fa-cut' },
+                { id: 'mamones', name: '% Mamones', value: 5.2, icon: 'fas fa-tree' },
+                { id: 'lalas', name: '% Lalas', value: 0.8, icon: 'fas fa-leaf' },
+                { id: 'tallosSecos', name: '% Tallos Secos', value: 1.2, icon: 'fas fa-fire' },
+                { id: 'tallosDaniados', name: '% Tallos Dañados', value: 0.7, icon: 'fas fa-bug' },
+                { id: 'raices', name: '% Raíces Adheridas', value: 0.3, icon: 'fas fa-root' },
+                { id: 'punta', name: '% Punta', value: 2.5, icon: 'fas fa-arrow-up' },
+                { id: 'tierra', name: '% Tierra', value: 0.8, icon: 'fas fa-mountain' },
+                { id: 'piedra', name: '% Piedra', value: 0.1, icon: 'fas fa-gem' }
+            ];
+            
+            indicatorsGrid.innerHTML = indicators.map(ind => `
+                <div class="indicator-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h4><i class="${ind.icon}"></i> ${ind.name}</h4>
+                        <span style="font-weight: bold; color: ${getColorForValue(ind.id, ind.value)}">
+                            ${ind.value}%
+                        </span>
+                    </div>
+                    <div style="height: 8px; background: #eee; border-radius: 4px; overflow: hidden;">
+                        <div style="height: 100%; width: ${Math.min(ind.value * 10, 100)}%; 
+                             background: ${getColorForValue(ind.id, ind.value)}; border-radius: 4px;">
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 5px; font-size: 0.8rem; color: #666;">
+                        <span>0%</span>
+                        <span>10%</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Descargar datos como CSV
+        function downloadData() {
+            if (AppState.data.length === 0) {
+                alert('No hay datos para descargar');
+                return;
+            }
+            
+            const headers = Object.keys(AppState.data[0]);
+            const csvContent = [
+                headers.join(','),
+                ...AppState.data.map(row => 
+                    headers.map(header => 
+                        `"${(row[header] || '').toString().replace(/"/g, '""')}"`
+                    ).join(',')
+                )
+            ].join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `datos_calidad_${new Date().toISOString().slice(0,10)}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Generar PDF
+        async function generatePDF() {
+            alert('Funcionalidad de PDF en desarrollo. Por ahora use la descarga CSV.');
+            // En una implementación completa, usaríamos jsPDF y html2canvas
+        }
+        
+        // Descargar gráfico principal
+        function downloadMainChart() {
+            if (!AppState.charts.main) return;
+            
+            const link = document.createElement('a');
+            link.download = `grafico_tendencia_${new Date().toISOString().slice(0,10)}.png`;
+            link.href = AppState.charts.main.toBase64Image();
+            link.click();
+        }
+        
+        // Descargar gráfico de barras
+        function downloadBarChart() {
+            if (!AppState.charts.bar) return;
+            
+            const link = document.createElement('a');
+            link.download = `grafico_barras_${new Date().toISOString().slice(0,10)}.png`;
+            link.href = AppState.charts.bar.toBase64Image();
+            link.click();
+        }
+        
+        // Alternar etiquetas en gráficos
+        function toggleChartLabels() {
+            if (!AppState.charts.main) return;
+            
+            const current = AppState.charts.main.options.plugins.datalabels?.display;
+            AppState.charts.main.options.plugins.datalabels = {
+                display: !current,
+                color: '#333',
+                font: {
+                    weight: 'bold'
+                }
+            };
+            
+            AppState.charts.main.update();
+        }
+        
+        // Función para hacer fetch al Google Apps Script
+        async function fetchGAS(action, params = {}) {
+            const url = new URL(CONFIG.GAS_URL);
+            
+            // Agregar parámetros
+            url.searchParams.append('action', action);
+            Object.keys(params).forEach(key => {
+                if (params[key] !== undefined && params[key] !== '') {
+                    url.searchParams.append(key, params[key]);
+                }
+            });
+            
+            // Agregar timestamp para evitar caché
+            url.searchParams.append('t', Date.now());
+            
+            const response = await fetch(url.toString(), {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            return await response.json();
+        }
+        
+        // Funciones de utilidad
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+        
+        function showTableLoading() {
+            document.getElementById('tableLoading').style.display = 'flex';
+        }
+        
+        function hideTableLoading() {
+            document.getElementById('tableLoading').style.display = 'none';
+        }
+        
+        function showAlert(elementId, type, message) {
+            const alertDiv = document.getElementById(elementId);
+            alertDiv.innerHTML = `
+                <div class="alert alert-${type}">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                    ${message}
+                </div>
+            `;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    alertDiv.innerHTML = '';
+                }, 3000);
+            }
+        }
+        
+        function getColorForKPI(kpiId, value) {
+            const thresholds = CONFIG.thresholds[kpiId];
+            if (!thresholds) return CONFIG.colors.good;
+            
+            if (value <= thresholds.good) return CONFIG.colors.good;
+            if (value <= thresholds.warning) return CONFIG.colors.warning;
+            return CONFIG.colors.bad;
+        }
+        
+        function getColorForValue(indicatorId, value) {
+            // Lógica simple para determinar color
+            if (indicatorId.includes('impurezas') || indicatorId.includes('puntaBasura')) {
+                if (value < 5) return CONFIG.colors.good;
+                if (value < 10) return CONFIG.colors.warning;
+                return CONFIG.colors.bad;
+            } else if (indicatorId.includes('alturaCorte')) {
+                if (value > 14) return CONFIG.colors.good;
+                if (value > 10) return CONFIG.colors.warning;
+                return CONFIG.colors.bad;
+            } else {
+                if (value > 3) return CONFIG.colors.good;
+                if (value > 2) return CONFIG.colors.warning;
+                return CONFIG.colors.bad;
+            }
+        }
+        
+        function formatKPIValue(value, format) {
+            switch(format) {
+                case 'percent': return `${value}%`;
+                case 'kg': return `${value} kg`;
+                case 'cm': return `${value} cm`;
+                default: return value;
+            }
+        }
+        
+        function getIndicatorLabel(indicatorId) {
+            const labels = {
+                impurezasTotales: 'Impurezas Totales',
+                puntaBasura: 'Punta en Basura',
+                alturaCorte: 'Altura de Corte',
+                usoBandas: 'Uso de Bandas',
+                pegadaCorte: 'Pegada de Corte'
+            };
+            return labels[indicatorId] || indicatorId;
+        }
+        
+        function getIndicatorUnit(indicatorId) {
+            const units = {
+                impurezasTotales: '%',
+                puntaBasura: 'kg',
+                alturaCorte: 'cm',
+                usoBandas: 'unidades',
+                pegadaCorte: 'n°'
+            };
+            return units[indicatorId] || '';
+        }
+        
+        function getIndicatorColor(indicatorId) {
+            const colors = {
+                impurezasTotales: CONFIG.colors.bad,
+                puntaBasura: CONFIG.colors.warning,
+                alturaCorte: CONFIG.colors.good,
+                usoBandas: '#2196f3',
+                pegadaCorte: '#9c27b0'
+            };
+            return colors[indicatorId] || '#666';
+        }
+        
+        function getTrendClass(indicatorId) {
+            // Simular tendencia (en producción calcularía basado en datos históricos)
+            return Math.random() > 0.5 ? 'up' : 'down';
+        }
+        
+        function getTrendIcon(indicatorId) {
+            return getTrendClass(indicatorId) === 'up' ? 'fa-arrow-up' : 'fa-arrow-down';
+        }
+        
+        function getTrendText(indicatorId) {
+            const trend = getTrendClass(indicatorId);
+            const value = (Math.random() * 5).toFixed(1);
+            return trend === 'up' ? `+${value}%` : `-${value}%`;
+        }
+    </script>
 </body>
 </html>
