@@ -1026,47 +1026,111 @@
                 }
             });
 
-            // Enviar registro
-            submitRegister.addEventListener('click', async () => {
-                const email = document.getElementById('registerEmail').value;
-                const password = document.getElementById('registerPassword').value;
-                const confirm = document.getElementById('registerConfirm').value;
-                const alertDiv = document.getElementById('registerAlert');
+           // Enviar registro - VERSIÓN MEJORADA
+submitRegister.addEventListener('click', async () => {
+  const email = document.getElementById('registerEmail').value;
+  const password = document.getElementById('registerPassword').value;
+  const confirm = document.getElementById('registerConfirm').value;
+  const alertDiv = document.getElementById('registerAlert');
 
-                if (!email || !password || !confirm) {
-                    showAlert(alertDiv, 'Por favor completa todos los campos', 'error');
-                    return;
-                }
+  if (!email || !password || !confirm) {
+    showAlert(alertDiv, 'Por favor completa todos los campos', 'error');
+    return;
+  }
 
-                if (password !== confirm) {
-                    showAlert(alertDiv, 'Las contraseñas no coinciden', 'error');
-                    return;
-                }
+  if (password !== confirm) {
+    showAlert(alertDiv, 'Las contraseñas no coinciden', 'error');
+    return;
+  }
 
-                if (password.length < 6) {
-                    showAlert(alertDiv, 'La contraseña debe tener al menos 6 caracteres', 'error');
-                    return;
-                }
+  if (password.length < 6) {
+    showAlert(alertDiv, 'La contraseña debe tener al menos 6 caracteres', 'error');
+    return;
+  }
 
-                showAlert(alertDiv, 'Creando cuenta...', 'info');
+  showAlert(alertDiv, 'Creando cuenta...', 'info');
+  
+  // Mostrar datos que se enviarán
+  console.log('Enviando registro:', { email, passwordLength: password.length });
 
-                try {
-                    const response = await fetch(GAS_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
-                        body: new URLSearchParams({
-                            action: 'register',
-                            email: email,
-                            password: password
-                        })
-                    });
+  try {
+    // Crear parámetros de forma más robusta
+    const params = new URLSearchParams();
+    params.append('action', 'register');
+    params.append('email', email);
+    params.append('password', password);
+    
+    console.log('URL de destino:', GAS_URL);
+    console.log('Parámetros:', params.toString());
 
-                    const data = await response.json();
+    // Configurar timeout y opciones más robustas
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-                    if (data.success) {
-                        showAlert(alertDiv, '¡Cuenta creada exitosamente! Ahora puedes iniciar sesión.', 'success');
+    const response = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Accept': 'application/json'
+      },
+      body: params,
+      signal: controller.signal,
+      mode: 'cors'
+    });
+
+    clearTimeout(timeoutId);
+
+    console.log('Respuesta recibida. Status:', response.status);
+    console.log('Headers:', JSON.stringify([...response.headers]));
+
+    // Verificar si la respuesta es JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('Respuesta no es JSON:', text.substring(0, 500));
+      throw new Error(`Respuesta no es JSON: ${text.substring(0, 100)}`);
+    }
+
+    const data = await response.json();
+    console.log('Datos de respuesta:', data);
+
+    if (data.success) {
+      showAlert(alertDiv, '¡Cuenta creada exitosamente! Ahora puedes iniciar sesión.', 'success');
+      
+      // Cambiar a formulario de login
+      setTimeout(() => {
+        registerForm.classList.remove('active');
+        loginForm.classList.add('active');
+        document.getElementById('loginEmail').value = email;
+        document.getElementById('loginPassword').value = '';
+        document.getElementById('registerEmail').value = '';
+        document.getElementById('registerPassword').value = '';
+        document.getElementById('registerConfirm').value = '';
+      }, 2000);
+    } else {
+      showAlert(alertDiv, `Error: ${data.message || 'Error desconocido'}`, 'error');
+      console.error('Error del servidor:', data);
+    }
+    
+  } catch (error) {
+    console.error('Error completo:', error);
+    
+    let errorMessage = 'Error de conexión: ';
+    
+    if (error.name === 'AbortError') {
+      errorMessage += 'Tiempo de espera agotado (30 segundos)';
+    } else if (error.message.includes('Failed to fetch')) {
+      errorMessage += 'No se pudo conectar con el servidor. Verifica:';
+      errorMessage += '<br>1. URL del GAS es correcta';
+      errorMessage += '<br>2. El GAS está desplegado correctamente';
+      errorMessage += '<br>3. No hay bloqueos de CORS';
+    } else {
+      errorMessage += error.message;
+    }
+    
+    showAlert(alertDiv, errorMessage, 'error');
+  }
+});
                         
                         // Cambiar a formulario de login después de 2 segundos
                         setTimeout(() => {
