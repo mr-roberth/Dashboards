@@ -1443,35 +1443,92 @@
             AppState.charts.main.update();
         }
         
-        // Función para hacer fetch al Google Apps Script
-        async function fetchGAS(action, params = {}) {
-            const url = new URL(CONFIG.GAS_URL);
-            
-            // Agregar parámetros
-            url.searchParams.append('action', action);
-            Object.keys(params).forEach(key => {
-                if (params[key] !== undefined && params[key] !== '') {
-                    url.searchParams.append(key, params[key]);
-                }
-            });
-            
-            // Agregar timestamp para evitar caché
-            url.searchParams.append('t', Date.now());
-            
-            const response = await fetch(url.toString(), {
-                method: 'GET',
-                mode: 'cors',
-                headers: {
-                    'Accept': 'application/json'
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            return await response.json();
+       // Función para hacer fetch al Google Apps Script (versión robusta)
+async function fetchGAS(action, params = {}) {
+  // Construir URL base
+  let url = CONFIG.GAS_URL;
+  
+  // Para solicitudes GET, agregar parámetros a la URL
+  if (action !== 'login' && action !== 'register') {
+    const urlObj = new URL(url);
+    urlObj.searchParams.append('action', action);
+    
+    // Agregar otros parámetros
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        urlObj.searchParams.append(key, params[key]);
+      }
+    });
+    
+    // Agregar timestamp para evitar caché
+    urlObj.searchParams.append('_t', Date.now());
+    url = urlObj.toString();
+  }
+  
+  // Configurar opciones de fetch
+  const fetchOptions = {
+    method: 'GET',
+    mode: 'cors',
+    headers: {
+      'Accept': 'application/json'
+    }
+  };
+  
+  // Para login y register, usar POST con JSON
+  if (action === 'login' || action === 'register') {
+    const urlObj = new URL(url);
+    urlObj.searchParams.append('action', action);
+    urlObj.searchParams.append('_t', Date.now());
+    url = urlObj.toString();
+    
+    // Los parámetros se enviarán en la URL para GAS
+    Object.keys(params).forEach(key => {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== '') {
+        urlObj.searchParams.append(key, params[key]);
+      }
+    });
+    
+    url = urlObj.toString();
+  }
+  
+  try {
+    console.log('Fetching URL:', url);
+    const response = await fetch(url, fetchOptions);
+    
+    if (!response.ok) {
+      throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    return data;
+    
+  } catch (error) {
+    console.error('Error en fetchGAS:', error);
+    
+    // Intentar una prueba de conexión simple
+    if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+      const testUrl = new URL(CONFIG.GAS_URL);
+      testUrl.searchParams.append('action', 'test');
+      testUrl.searchParams.append('_t', Date.now());
+      
+      try {
+        const testResponse = await fetch(testUrl.toString(), { method: 'GET', mode: 'cors' });
+        if (testResponse.ok) {
+          const testData = await testResponse.json();
+          console.log('Test connection successful:', testData);
+          return {
+            success: false,
+            message: `Error de conexión: ${error.message}. El servidor responde pero hay un problema con la acción "${action}".`
+          };
         }
+      } catch (testError) {
+        console.error('Test connection failed:', testError);
+      }
+    }
+    
+    throw error;
+  }
+}
         
         // Funciones de utilidad
         function showLoading() {
